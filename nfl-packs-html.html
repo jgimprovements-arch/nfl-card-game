@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NFL Card Packs</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Oswald','Arial Narrow',sans-serif}
+body{background:#000308;color:#F1F5F9}
+button{cursor:pointer}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#FFB80044;border-radius:2px}
+@keyframes cFlip{from{opacity:0;transform:rotateY(90deg) scale(.8)}to{opacity:1;transform:rotateY(0)}}
+@keyframes shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
+@keyframes gMyth{0%,100%{box-shadow:0 0 22px 5px #e879f9,0 0 55px 10px #a855f755}50%{box-shadow:0 0 34px 9px #f0abfc,0 0 75px 18px #a855f788}}
+@keyframes gLeg{0%,100%{box-shadow:0 0 16px 4px #FFB800}50%{box-shadow:0 0 28px 7px #FFB800}}
+@keyframes gUltra{0%,100%{box-shadow:0 0 14px 3px #4ade80}50%{box-shadow:0 0 24px 6px #86efac}}
+@keyframes gEpic{0%,100%{box-shadow:0 0 12px 3px #A855F7}50%{box-shadow:0 0 22px 6px #C084FC}}
+@keyframes gRare{0%,100%{box-shadow:0 0 7px 2px #3B82F6}50%{box-shadow:0 0 14px 4px #60A5FA}}
+@keyframes bPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.1)}}
+@keyframes rainbow{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(360deg)}}
+@keyframes tGlow{0%,100%{text-shadow:0 0 20px #FFB80066}50%{text-shadow:0 0 36px #FFB800aa}}
+@keyframes gridPulse{0%,100%{opacity:.04}50%{opacity:.08}}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes toastIn{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes pShake{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-6deg) scale(1.05)}50%{transform:rotate(6deg) scale(1.05)}75%{transform:rotate(-3deg) scale(1.02)}}
+@keyframes pGlow{0%,100%{filter:drop-shadow(0 0 16px #FFB80099)}50%{filter:drop-shadow(0 0 34px #FFB800cc)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useCallback}=React;
+
+/* =====================================================================
+   ROSTER SOURCE  --  EDIT THIS ONE LINE ONLY
+   Put players.json in the SAME repo/folder as this file.
+   If served from GitHub Pages, the default below works as-is
+   because it loads players.json sitting next to index.html.
+   This file makes NO other network calls. Nothing else. Fully standalone.
+   ===================================================================== */
+const ROSTER_URL = "players.json";
+
+function val(r,p){const b={myth:40000,legendary:8000,ultra:3500,epic:1500,rare:300,common:50};return Math.round((b[r]||50)*p)}
+function mp(v){return Math.round(v*2.5)}
+const RC={
+ myth:{label:"LEGEND",bg:"linear-gradient(135deg,#0a0012,#1a0533,#6b21a8,#a855f7,#fbbf24,#a855f7,#1a0533)",border:"#f0abfc",glow:"#e879f9"},
+ legendary:{label:"LEGENDARY",bg:"linear-gradient(150deg,#78350f,#b45309,#f59e0b,#fde68a)",border:"#FFB800",glow:"#FFB800"},
+ ultra:{label:"ULTRA RARE",bg:"linear-gradient(150deg,#164e1a,#15803d,#4ade80,#bbf7d0)",border:"#4ade80",glow:"#22c55e"},
+ epic:{label:"EPIC",bg:"linear-gradient(150deg,#3b0764,#7e22ce,#c084fc)",border:"#C084FC",glow:"#A855F7"},
+ rare:{label:"RARE",bg:"linear-gradient(150deg,#1e3a5f,#2563eb,#93c5fd)",border:"#60A5FA",glow:"#3B82F6"},
+ common:{label:"COMMON",bg:"linear-gradient(150deg,#1f2937,#374151,#6b7280)",border:"#9CA3AF",glow:"#6B7280"}
+};
+const RO={myth:0,legendary:1,ultra:2,epic:3,rare:4,common:5};
+const PI={QB:"🏈",RB:"💨",WR:"⚡",TE:"🎯",DE:"🛡️",DT:"🦾",LB:"🔥",CB:"🔒",S:"👁️",K:"🦵",OT:"💪",G:"💪",C:"💪"};
+const LS=[
+ {id:"QB1",label:"QB",pos:["QB"],icon:"🏈"},{id:"RB1",label:"RB1",pos:["RB"],icon:"💨"},{id:"RB2",label:"RB2",pos:["RB"],icon:"💨"},
+ {id:"WR1",label:"WR1",pos:["WR"],icon:"⚡"},{id:"WR2",label:"WR2",pos:["WR"],icon:"⚡"},{id:"WR3",label:"WR3",pos:["WR"],icon:"⚡"},
+ {id:"TE1",label:"TE",pos:["TE"],icon:"🎯"},{id:"FLEX",label:"FLEX",pos:["RB","WR","TE"],icon:"🔄"},{id:"OT1",label:"OT",pos:["OT","G","C"],icon:"💪"},
+ {id:"DE1",label:"DE1",pos:["DE","LB"],icon:"🛡️"},{id:"DE2",label:"DE2",pos:["DE","LB"],icon:"🛡️"},{id:"DT1",label:"DT",pos:["DT","DE"],icon:"🦾"},
+ {id:"LB1",label:"LB1",pos:["LB"],icon:"🔥"},{id:"LB2",label:"LB2",pos:["LB"],icon:"🔥"},
+ {id:"CB1",label:"CB1",pos:["CB"],icon:"🔒"},{id:"CB2",label:"CB2",pos:["CB"],icon:"🔒"},
+ {id:"S1",label:"S1",pos:["S","CB"],icon:"👁️"},{id:"S2",label:"S2",pos:["S","CB"],icon:"👁️"},{id:"K1",label:"K",pos:["K"],icon:"🦵"}
+];
+const PT=[
+ {id:"starter",name:"Starter Pack",emoji:"🏈",cost:0,desc:"Beginner pack",color:"#6B7280",border:"#9CA3AF",rates:[{r:"rare",c:.45},{r:"common",c:1}],n:5},
+ {id:"standard",name:"NFL Pack",emoji:"🏈",cost:500,desc:"5 cards mixed",color:"#FFB800",border:"#FFB800",rates:[{r:"legendary",c:.01},{r:"ultra",c:.04},{r:"epic",c:.13},{r:"rare",c:.45},{r:"common",c:1}],n:5},
+ {id:"gold",name:"Gold Pack",emoji:"🥇",cost:1200,desc:"Guaranteed Rare+",color:"#f59e0b",border:"#FFB800",rates:[{r:"legendary",c:.03},{r:"ultra",c:.10},{r:"epic",c:.28},{r:"rare",c:1}],n:5},
+ {id:"elite",name:"Elite Pack",emoji:"💎",cost:2500,desc:"Guaranteed Epic+",color:"#a855f7",border:"#C084FC",rates:[{r:"legendary",c:.06},{r:"ultra",c:.20},{r:"epic",c:1}],n:5},
+ {id:"ultimate",name:"Ultimate Pack",emoji:"👑",cost:5000,desc:"Guaranteed Ultra+",color:"#f59e0b",border:"#4ade80",rates:[{r:"myth",c:.01},{r:"legendary",c:.12},{r:"ultra",c:1}],n:5},
+ {id:"legend",name:"Legends Pack",emoji:"⭐",cost:2500,desc:"1 guaranteed Legend",color:"#e879f9",border:"#f0abfc",rates:[{r:"myth",c:.25},{r:"legendary",c:.45},{r:"ultra",c:.70},{r:"epic",c:1}],n:5,lg:true},
+ {id:"mega",name:"Mega Pack",emoji:"🎰",cost:3500,desc:"12 cards mixed!",color:"#fb923c",border:"#fdba74",rates:[{r:"legendary",c:.04},{r:"ultra",c:.14},{r:"epic",c:.32},{r:"rare",c:.68},{r:"common",c:1}],n:12}
+];
+
+function eP(p){let r=p.rarity;if(r==="epic"&&p.prestige>=1.5)r="ultra";const v=val(r,p.prestige);return{...p,rarity:r,value:v,marketPrice:mp(v),uid:p.name+p.team}}
+function eL(p){const v=val("myth",p.prestige);return{...p,rarity:"myth",value:v,marketPrice:mp(v),uid:p.name+p.team+"L"}}
+function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+"M";if(n>=1e3)return(n/1e3).toFixed(n%1e3===0?0:1)+"K";return String(n)}
+
+const SK="nfl-packs-standalone-v1";
+const DS={coins:8000,pi:{starter:3,standard:0,gold:0,elite:0,ultimate:0,legend:1,mega:0},col:[],lu:{}};
+
+function Card({card,rev,onClick,sz,badge}){
+ sz=sz||"md";const c=RC[card.rarity]||RC.common;
+ const im=card.rarity==="myth",il=card.rarity==="legendary",iu=card.rarity==="ultra",ie=card.rarity==="epic",ir=card.rarity==="rare";
+ const w=sz==="sm"?118:148,h=sz==="sm"?168:215;
+ const ga=im?"gMyth":il?"gLeg":iu?"gUltra":ie?"gEpic":ir?"gRare":"none";
+ return(
+  <div onClick={onClick} style={{width:w,flexShrink:0,cursor:onClick?"pointer":"default"}}>
+   <div style={{width:"100%",height:h,borderRadius:12,overflow:"hidden",position:"relative",
+    background:rev?c.bg:"linear-gradient(140deg,#0d1117,#161b22,#0d1117)",
+    border:`2px solid ${rev?c.border:"#21262d"}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",padding:"8px 8px 9px",
+    animation:rev?`cFlip .4s cubic-bezier(.4,0,.2,1) both,${ga} 2.2s ease-in-out .5s infinite`:"bPulse 2.8s ease-in-out infinite"}}>
+    {!rev&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}><div style={{fontSize:36}}>🏈</div><div style={{fontSize:7,letterSpacing:3,color:"#3d4451"}}>TAP TO REVEAL</div></div>}
+    {rev&&<>
+     {(im||il||iu)&&<div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%)",backgroundSize:"300% 100%",animation:"shimmer 2.2s linear infinite"}}/>}
+     {im&&<div style={{position:"absolute",inset:-2,borderRadius:14,zIndex:-1,background:"linear-gradient(45deg,#f59e0b,#e879f9,#60A5FA,#34d399,#f59e0b)",backgroundSize:"300% 300%",animation:"shimmer 3s linear infinite"}}/>}
+     <div style={{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:1}}>
+      <div style={{fontSize:6,letterSpacing:1.5,fontWeight:700,padding:"2px 5px",borderRadius:3,color:im?"#000":"#fff",background:im?"linear-gradient(90deg,#f59e0b,#e879f9,#60A5FA)":c.glow,animation:im?"rainbow 4s linear infinite":"none"}}>{c.label}</div>
+      <div style={{fontSize:8,color:"rgba(255,255,255,.65)"}}>{card.team}{im&&card.era?" · "+card.era:""}</div>
+     </div>
+     <div style={{fontSize:28,filter:`drop-shadow(0 0 ${im?16:il?12:8}px ${c.glow})`,lineHeight:1}}>{im?"⭐":PI[card.pos]||"🏈"}</div>
+     <div style={{textAlign:"center",width:"100%",zIndex:1}}>
+      <div style={{fontSize:card.name.length>18?(sz==="sm"?7:8.5):card.name.length>14?(sz==="sm"?8:10):(sz==="sm"?10:12),fontWeight:700,color:im?"#fde68a":"#F1F5F9",lineHeight:1.15,textShadow:`0 0 6px ${c.glow}66`}}>{card.name}</div>
+      <div style={{fontSize:7,color:`${c.border}cc`,letterSpacing:2,marginTop:1}}>{card.pos}</div>
+     </div>
+     <div style={{marginTop:4,padding:"3px 10px",borderRadius:16,background:"rgba(0,0,0,.35)",border:`1px solid ${c.border}44`,display:"flex",alignItems:"center",gap:4}}>
+      <span style={{fontSize:10}}>🪙</span><span style={{fontSize:sz==="sm"?10:11,fontWeight:700,color:im?"#fbbf24":c.border}}>{fmt(card.value)}</span>
+     </div>
+     {badge&&<div style={{position:"absolute",top:4,right:4,background:badge.bg,borderRadius:10,padding:"2px 6px",fontSize:7,color:"#fff",letterSpacing:1}}>{badge.text}</div>}
+    </>}
+   </div>
+  </div>
+ );
+}
+
+function Slot({slot,card,onClick}){
+ const c=card?RC[card.rarity]||RC.common:null;
+ return(
+  <div onClick={()=>onClick(slot)} style={{width:88,height:110,borderRadius:10,cursor:"pointer",border:`1.5px solid ${c?c.border+"77":"#21262d"}`,background:c?c.bg:"rgba(255,255,255,.02)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,flexShrink:0}}>
+   {card?<>
+    <div style={{fontSize:22}}>{card.rarity==="myth"?"⭐":PI[card.pos]||"🏈"}</div>
+    <div style={{fontSize:card.name.length>14?7:8.5,fontWeight:700,color:"#F1F5F9",textAlign:"center",lineHeight:1.2,padding:"0 4px"}}>{card.name}</div>
+    <div style={{fontSize:7,color:`${c.border}cc`,letterSpacing:1}}>{slot.label}</div>
+    <div style={{fontSize:8,color:c.border}}>🪙{fmt(card.value)}</div>
+   </>:<>
+    <div style={{fontSize:22,opacity:.3}}>{slot.icon}</div>
+    <div style={{fontSize:9,color:"#374151",letterSpacing:2}}>{slot.label}</div>
+    <div style={{fontSize:7,color:"#21262d"}}>EMPTY</div>
+   </>}
+  </div>
+ );
+}
+
+function App(){
+ const[ALL,setALL]=useState(null);
+ const[err,setErr]=useState(null);
+ const[coins,setCoins]=useState(DS.coins);
+ const[pi,setPi]=useState(DS.pi);
+ const[col,setCol]=useState(DS.col);
+ const[lu,setLu]=useState(DS.lu);
+ const[scr,setScr]=useState("home");
+ const[oc,setOc]=useState([]);
+ const[rev,setRev]=useState([]);
+ const[allR,setAllR]=useState(false);
+ const[toast,setToast]=useState(null);
+ const[sortBy,setSortBy]=useState("rarity");
+ const[filterR,setFilterR]=useState("all");
+ const[sellMode,setSellMode]=useState(false);
+ const[mf,setMf]=useState("all");
+ const[ms,setMs]=useState("");
+ const[lp,setLp]=useState(null);
+ const[apt,setApt]=useState("standard");
+ const[shk,setShk]=useState(false);
+ const[loaded,setLoaded]=useState(false);
+
+ // Load roster from players.json (the ONLY network call this app makes)
+ useEffect(()=>{
+  fetch(ROSTER_URL).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+   .then(d=>{
+    const act=(d.active||[]).map(eP);
+    const leg=(d.legends||[]).map(eL);
+    setALL([...act,...leg]);
+   }).catch(e=>setErr(e.message));
+ },[]);
+
+ useEffect(()=>{
+  try{const r=localStorage.getItem(SK);if(r){const s=JSON.parse(r);setCoins(s.coins??DS.coins);setPi(s.pi??DS.pi);setCol(s.col??[]);setLu(s.lu??{})}}catch(_){}
+  setLoaded(true);
+ },[]);
+ const save=useCallback((c,p,co,l)=>{try{localStorage.setItem(SK,JSON.stringify({coins:c,pi:p,col:co,lu:l}))}catch(_){}},[]);
+ useEffect(()=>{if(loaded)save(coins,pi,col,lu)},[coins,pi,col,lu,loaded,save]);
+
+ const sT=(m,c)=>{setToast({m,c:c||"#FFB800"});setTimeout(()=>setToast(null),2400)};
+
+ if(err)return<div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,padding:24,textAlign:"center"}}>
+  <div style={{fontSize:18,color:"#ef4444",letterSpacing:2}}>COULD NOT LOAD ROSTER</div>
+  <div style={{fontSize:12,color:"#9CA3AF",maxWidth:420,lineHeight:1.6}}>The game needs <b>players.json</b> next to this file. Error: {err}. If opening directly off your computer, use GitHub Pages or a local server — browsers block file:// fetch.</div>
+ </div>;
+ if(!ALL||!loaded)return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#FFB800",letterSpacing:4,fontSize:16}}>LOADING ROSTER…</div>;
+
+ const PL={myth:ALL.filter(c=>c.rarity==="myth"),legendary:ALL.filter(c=>c.rarity==="legendary"),ultra:ALL.filter(c=>c.rarity==="ultra"),epic:ALL.filter(c=>c.rarity==="epic"),rare:ALL.filter(c=>c.rarity==="rare"),common:ALL.filter(c=>c.rarity==="common")};
+ const roll=(rates)=>{const r=Math.random();for(const{r:rar,c}of rates){if(r<c){const p=PL[rar];if(p&&p.length)return p[Math.floor(Math.random()*p.length)]}}const p=PL.common.length?PL.common:ALL;return p[Math.floor(Math.random()*p.length)]};
+ const rollPack=(id)=>{const p=PT.find(x=>x.id===id);if(!p)return[];const c=[];if(p.lg&&PL.myth.length)c.push({...PL.myth[Math.floor(Math.random()*PL.myth.length)],uid:Math.random()});for(let i=c.length;i<p.n;i++)c.push({...roll(p.rates),uid:Math.random()});return c};
+
+ const openPack=(id)=>{if((pi[id]||0)<1){sT("No packs!","#ef4444");return}setPi(p=>({...p,[id]:(p[id]||0)-1}));const cards=rollPack(id);setOc(cards);setRev([]);setAllR(false);setApt(id);setShk(true);setScr("opening");setTimeout(()=>setShk(false),1100)};
+ const buyPack=(id)=>{const p=PT.find(x=>x.id===id);if(!p||!p.cost)return;if(coins<p.cost){sT("Not enough coins!","#ef4444");return}setCoins(c=>c-p.cost);setPi(x=>({...x,[id]:(x[id]||0)+1}));sT(p.name+" added! 📦",p.color)};
+ const revCard=(i)=>{if(rev.includes(i))return;const n=[...rev,i];setRev(n);if(n.length===oc.length)setTimeout(()=>setAllR(true),600)};
+ const revAll=()=>{oc.forEach((_,i)=>setTimeout(()=>setRev(r=>[...new Set([...r,i])]),i*180));setTimeout(()=>setAllR(true),oc.length*180+600)};
+ const collect=()=>{setCol(c=>[...c,...oc.map(x=>({...x,uid:x.uid||Math.random()}))]);setOc([]);setRev([]);setAllR(false);setScr("home")};
+ const sellCard=(uid)=>{const c=col.find(x=>x.uid===uid);if(!c)return;const nlu={...lu};Object.keys(nlu).forEach(k=>{if(nlu[k]===uid)delete nlu[k]});setLu(nlu);setCoins(v=>v+c.value);setCol(x=>x.filter(y=>y.uid!==uid));sT(`Sold ${c.name} · 🪙${fmt(c.value)}`,RC[c.rarity]?.border)};
+ const sellByR=(r)=>{const ts=col.filter(c=>c.rarity===r&&!Object.values(lu).includes(c.uid));const t=ts.reduce((s,c)=>s+c.value,0);const u=new Set(ts.map(c=>c.uid));setCol(c=>c.filter(x=>!u.has(x.uid)));setCoins(c=>c+t);sT(`Sold ${ts.length} ${RC[r]?.label}s · 🪙${fmt(t)}`)};
+ const buyMkt=(card)=>{if(coins<card.marketPrice){sT("Not enough coins!","#ef4444");return}setCoins(c=>c-card.marketPrice);setCol(c=>[...c,{...card,uid:Math.random()}]);sT(`Bought ${card.name}!`,RC[card.rarity]?.border)};
+ const slotClick=(s)=>{setLp(s);setScr("lineup-pick")};
+ const assign=(uid)=>{if(!lp)return;const nlu={...lu};Object.keys(nlu).forEach(k=>{if(nlu[k]===uid)delete nlu[k]});nlu[lp.id]=uid;setLu(nlu);setLp(null);setScr("lineup")};
+
+ const sc=[...col].sort((a,b)=>sortBy==="rarity"?RO[a.rarity]-RO[b.rarity]||b.value-a.value:sortBy==="value"?b.value-a.value:sortBy==="team"?a.team.localeCompare(b.team):a.pos.localeCompare(b.pos));
+ const fc=filterR==="all"?sc:filterR==="legend"?sc.filter(c=>c.rarity==="myth"):sc.filter(c=>c.rarity===filterR);
+ const tv=col.reduce((s,c)=>s+c.value,0);
+ const lv=LS.reduce((s,sl)=>{const u=lu[sl.id];if(!u)return s;const c=col.find(x=>x.uid===u);return c?s+c.value:s},0);
+ const rc=col.reduce((a,c)=>({...a,[c.rarity]:(a[c.rarity]||0)+1}),{});
+ const mkC=ALL.filter(c=>{if(mf!=="all"&&c.rarity!==mf)return false;if(ms&&!c.name.toLowerCase().includes(ms.toLowerCase())&&!c.team.toLowerCase().includes(ms.toLowerCase()))return false;return true}).sort((a,b)=>RO[a.rarity]-RO[b.rarity]||b.value-a.value);
+ const elig=lp?col.filter(c=>lp.pos.includes(c.pos)):[];
+ const NAV=[{id:"home",l:"PACKS",i:"📦"},{id:"binder",l:"BINDER",i:"📂"},{id:"lineup",l:"LINEUP",i:"🏟️"},{id:"market",l:"MARKET",i:"🏪"}];
+ const pt=PT.find(p=>p.id===apt)||PT[1];
+
+ return(
+  <div style={{minHeight:"100vh",background:"radial-gradient(ellipse at 15% 10%,#1a0800 0%,#05050f 50%,#000308 100%)",position:"relative",overflowX:"hidden"}}>
+   <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(#FFB80010 1px,transparent 1px),linear-gradient(90deg,#FFB80010 1px,transparent 1px)",backgroundSize:"64px 64px",animation:"gridPulse 5s ease-in-out infinite"}}/>
+   {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",zIndex:200,background:"rgba(0,0,0,.96)",border:`1px solid ${toast.c}55`,borderRadius:12,padding:"11px 22px",fontSize:12,letterSpacing:1.5,color:toast.c,boxShadow:`0 0 18px ${toast.c}44`,animation:"toastIn .3s ease both",whiteSpace:"nowrap"}}>{toast.m}</div>}
+
+   <div style={{position:"fixed",top:0,left:0,right:0,zIndex:100,background:"rgba(3,4,10,.94)",backdropFilter:"blur(14px)",borderBottom:"1px solid #FFB80020",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 16px"}}>
+    <div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800",animation:"tGlow 3s ease-in-out infinite"}}>🏈 NFL PACKS</div>
+    <div style={{display:"flex",alignItems:"center",gap:5,padding:"5px 12px",background:"rgba(255,184,0,.1)",border:"1px solid #FFB80044",borderRadius:18}}><span style={{fontSize:12}}>🪙</span><span style={{fontSize:13,fontWeight:700,color:"#FFB800"}}>{fmt(coins)}</span></div>
+   </div>
+
+   <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(3,4,10,.96)",backdropFilter:"blur(14px)",borderTop:"1px solid #21262d",display:"flex",justifyContent:"space-around",padding:"8px 0 10px"}}>
+    {NAV.map(n=><button key={n.id} onClick={()=>setScr(n.id)} style={{background:"transparent",border:"none",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",padding:"4px 16px",color:scr===n.id?"#FFB800":"#374151"}}><span style={{fontSize:20}}>{n.i}</span><span style={{fontSize:9,letterSpacing:2}}>{n.l}</span></button>)}
+   </div>
+
+   <div style={{paddingTop:58,paddingBottom:68,minHeight:"100vh"}}>
+
+    {scr==="home"&&<div style={{padding:"20px 16px",maxWidth:900,margin:"0 auto"}}>
+     <div style={{marginBottom:16,textAlign:"center"}}><div style={{fontSize:11,letterSpacing:4,color:"#374151"}}>PACK SHOP · {ALL.length} PLAYERS</div></div>
+     <div style={{display:"flex",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
+      {PT.map(p=>{const co=(pi[p.id]||0)>0,cb=coins>=p.cost;return<div key={p.id} style={{background:"rgba(255,255,255,.03)",border:`1px solid ${p.border}44`,borderRadius:14,padding:16,display:"flex",flexDirection:"column",gap:10,minWidth:200,maxWidth:240}}>
+       <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{fontSize:32}}>{p.emoji}</div><div><div style={{fontSize:13,fontWeight:700,color:p.color,letterSpacing:2}}>{p.name}</div><div style={{fontSize:10,color:"#4a5568",marginTop:2}}>{p.desc}</div></div></div>
+       <div style={{display:"flex",gap:8,alignItems:"center"}}>{p.cost>0&&<div style={{fontSize:11,color:"#FFB800",letterSpacing:1}}>🪙 {fmt(p.cost)}</div>}{(pi[p.id]||0)>0&&<div style={{fontSize:10,color:"#4ade80"}}>({pi[p.id]} stock)</div>}</div>
+       <div style={{display:"flex",gap:8}}>
+        <button onClick={()=>openPack(p.id)} disabled={!co} style={{flex:1,background:co?`linear-gradient(135deg,${p.color}88,${p.color})`:"#0d1117",border:"none",borderRadius:8,color:co?"#fff":"#21262d",padding:"8px 0",fontSize:11,fontWeight:700,letterSpacing:1.5,cursor:co?"pointer":"not-allowed"}}>{co?`OPEN (${pi[p.id]})`:"NO STOCK"}</button>
+        {p.cost>0&&<button onClick={()=>buyPack(p.id)} disabled={!cb} style={{background:cb?"rgba(255,255,255,.08)":"transparent",border:`1px solid ${cb?p.border+"66":"#21262d"}`,borderRadius:8,color:cb?p.color:"#374151",padding:"8px 12px",fontSize:10,letterSpacing:1,cursor:cb?"pointer":"not-allowed"}}>BUY</button>}
+       </div>
+      </div>})}
+     </div>
+    </div>}
+
+    {scr==="opening"&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 126px)"}}>
+     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24}}>
+      <div style={{fontSize:13,letterSpacing:4,color:pt.color}}>{shk?"Shaking...":"CLICK TO OPEN"}</div>
+      <div onClick={!shk?()=>setScr("reveal"):undefined} style={{width:175,height:240,background:`linear-gradient(160deg,#0d1117,${pt.color}22,#0d1117)`,border:`3px solid ${pt.border}`,borderRadius:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,cursor:shk?"default":"pointer",animation:shk?"pShake .35s ease infinite,pGlow 1s ease infinite":"pGlow .7s ease infinite",boxShadow:`0 0 44px ${pt.color}44`,position:"relative"}}>
+       <div style={{fontSize:56}}>{pt.emoji}</div><div style={{fontSize:14,letterSpacing:3,color:pt.color,fontWeight:700}}>{pt.name.toUpperCase()}</div><div style={{fontSize:9,letterSpacing:2,color:"#4a5568"}}>{pt.n} CARDS</div>
+       {!shk&&<div style={{position:"absolute",bottom:12,fontSize:9,letterSpacing:2,color:pt.color}}>CLICK TO RIP OPEN</div>}
+      </div>
+     </div>
+    </div>}
+
+    {scr==="reveal"&&<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"20px 12px",gap:18}}>
+     <div style={{fontSize:10,letterSpacing:4,color:"#374151"}}>TAP CARDS TO REVEAL</div>
+     <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{oc.map((c,i)=><Card key={c.uid||i} card={c} rev={rev.includes(i)} onClick={()=>revCard(i)}/>)}</div>
+     {allR&&<div style={{animation:"slideUp .4s ease both",textAlign:"center",width:"100%"}}>
+      <div style={{fontSize:13,color:"#FFB800",letterSpacing:2,marginBottom:14}}>TOTAL: 🪙 {fmt(oc.reduce((s,c)=>s+c.value,0))}</div>
+      <button onClick={collect} style={{background:"linear-gradient(135deg,#92400e,#d97706,#fbbf24)",border:"none",borderRadius:10,color:"#000",padding:"13px 36px",fontSize:15,fontWeight:700,letterSpacing:3,cursor:"pointer",boxShadow:"0 0 22px #FFB80066"}}>ADD TO BINDER →</button>
+     </div>}
+     {!allR&&<button onClick={revAll} style={{background:"transparent",border:"1px solid #21262d",borderRadius:8,color:"#374151",padding:"9px 22px",fontSize:10,letterSpacing:2,cursor:"pointer"}}>REVEAL ALL</button>}
+    </div>}
+
+    {scr==="binder"&&<div style={{padding:16,maxWidth:1080,margin:"0 auto"}}>
+     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
+      <div><div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800"}}>MY BINDER</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>{col.length} cards · 🪙{fmt(tv)}</div></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+       <button onClick={()=>setSellMode(s=>!s)} style={{background:sellMode?"#ef444415":"transparent",border:`1px solid ${sellMode?"#ef4444":"#21262d"}`,borderRadius:6,color:sellMode?"#ef4444":"#4a5568",padding:"5px 12px",fontSize:9,letterSpacing:2,cursor:"pointer"}}>{sellMode?"EXIT SELL":"SELL MODE"}</button>
+       {["common","rare"].map(r=>rc[r]>0&&<button key={r} onClick={()=>sellByR(r)} style={{background:"transparent",border:`1px solid ${RC[r].border}33`,borderRadius:6,color:RC[r].border,opacity:.7,padding:"5px 10px",fontSize:9,letterSpacing:1.5,cursor:"pointer"}}>SELL {RC[r].label}S ({rc[r]})</button>)}
+      </div>
+     </div>
+     <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>{Object.entries(RC).map(([r,c])=>rc[r]?<div key={r} style={{padding:"8px 14px",borderRadius:8,border:`1px solid ${c.border}33`,background:`${c.border}08`}}><div style={{fontSize:7,letterSpacing:2,color:c.border}}>{c.label}</div><div style={{fontSize:18,fontWeight:700,color:c.border}}>{rc[r]}</div></div>:null)}</div>
+     <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+      <span style={{fontSize:8,letterSpacing:2,color:"#21262d"}}>FILTER:</span>
+      {[["all","ALL"],["myth","LEGEND"],["legendary","LEG"],["ultra","ULTRA"],["epic","EPIC"],["rare","RARE"],["common","COM"]].map(([k,l])=><button key={k} onClick={()=>setFilterR(k)} style={{background:filterR===k?`${RC[k]?.border||"#FFB800"}18`:"transparent",border:`1px solid ${filterR===k?RC[k]?.border||"#FFB800":"#21262d"}`,borderRadius:6,color:filterR===k?RC[k]?.border||"#FFB800":"#374151",padding:"3px 10px",fontSize:9,letterSpacing:1,cursor:"pointer"}}>{l}</button>)}
+      <span style={{fontSize:8,letterSpacing:2,color:"#21262d",marginLeft:8}}>SORT:</span>
+      {[["rarity","RAR"],["value","VAL"],["team","TEAM"],["pos","POS"]].map(([k,l])=><button key={k} onClick={()=>setSortBy(k)} style={{background:sortBy===k?"#FFB80018":"transparent",border:`1px solid ${sortBy===k?"#FFB800":"#21262d"}`,borderRadius:6,color:sortBy===k?"#FFB800":"#374151",padding:"3px 10px",fontSize:9,letterSpacing:1,cursor:"pointer"}}>{l}</button>)}
+     </div>
+     {fc.length===0?<div style={{textAlign:"center",padding:"60px 0",color:"#21262d",fontSize:12,letterSpacing:3}}>NO CARDS YET</div>:
+     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{fc.map(c=><div key={c.uid} style={{display:"flex",flexDirection:"column",gap:4}}>
+      <Card card={c} rev={true}/>
+      {sellMode&&!Object.values(lu).includes(c.uid)&&<button onClick={()=>sellCard(c.uid)} style={{width:"100%",background:"rgba(0,0,0,.5)",border:`1px solid ${RC[c.rarity]?.border}44`,borderRadius:6,color:RC[c.rarity]?.border,fontSize:9,letterSpacing:1.5,padding:"5px 0",cursor:"pointer"}}>SELL · 🪙{fmt(c.value)}</button>}
+      {sellMode&&Object.values(lu).includes(c.uid)&&<div style={{textAlign:"center",fontSize:8,color:"#374151",padding:"5px 0"}}>IN LINEUP</div>}
+     </div>)}</div>}
+    </div>}
+
+    {scr==="lineup"&&<div style={{padding:16,maxWidth:900,margin:"0 auto"}}>
+     <div style={{marginBottom:14}}><div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800"}}>MY LINEUP</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>Value: 🪙{fmt(lv)} · Tap slot to assign</div></div>
+     {[{t:"OFFENSE",ids:["QB1","RB1","RB2","WR1","WR2","WR3","TE1","FLEX","OT1"]},{t:"DEFENSE",ids:["DE1","DE2","DT1","LB1","LB2","CB1","CB2","S1","S2"]},{t:"SPECIAL",ids:["K1"]}].map(g=>
+      <div key={g.t} style={{marginBottom:16}}><div style={{fontSize:10,letterSpacing:3,color:"#374151",marginBottom:8}}>{g.t}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{LS.filter(s=>g.ids.includes(s.id)).map(sl=>{const u=lu[sl.id];const c=u?col.find(x=>x.uid===u):null;return<Slot key={sl.id} slot={sl} card={c} onClick={slotClick}/>})}</div></div>)}
+    </div>}
+
+    {scr==="lineup-pick"&&lp&&<div style={{padding:16,maxWidth:900,margin:"0 auto"}}>
+     <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+      <button onClick={()=>{setLp(null);setScr("lineup")}} style={{background:"transparent",border:"1px solid #21262d",borderRadius:6,color:"#4a5568",padding:"5px 12px",fontSize:10,letterSpacing:2,cursor:"pointer"}}>← BACK</button>
+      <div><div style={{fontSize:14,fontWeight:700,color:"#FFB800",letterSpacing:3}}>CHOOSE {lp.label}</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>Eligible: {lp.pos.join(", ")}</div></div>
+     </div>
+     {elig.length===0?<div style={{textAlign:"center",padding:"60px 0",color:"#21262d",fontSize:12,letterSpacing:3}}>NO ELIGIBLE CARDS</div>:
+     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{elig.map(c=><div key={c.uid} style={{display:"flex",flexDirection:"column",gap:4}}>
+      <Card card={c} rev={true} onClick={()=>assign(c.uid)}/>
+      <button onClick={()=>assign(c.uid)} style={{width:"100%",background:`${RC[c.rarity]?.border}18`,border:`1px solid ${RC[c.rarity]?.border}55`,borderRadius:6,color:RC[c.rarity]?.border,fontSize:9,letterSpacing:1.5,padding:"5px 0",cursor:"pointer"}}>SELECT</button>
+     </div>)}</div>}
+    </div>}
+
+    {scr==="market"&&<div style={{padding:16,maxWidth:1080,margin:"0 auto"}}>
+     <div style={{marginBottom:12}}><div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800"}}>CARD MARKET</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>Buy any card · 2.5× sell value · 🪙{fmt(coins)}</div></div>
+     <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+      <input value={ms} onChange={e=>setMs(e.target.value)} placeholder="Search..." style={{background:"rgba(255,255,255,.05)",border:"1px solid #21262d",borderRadius:8,color:"#F1F5F9",padding:"6px 12px",fontSize:11,letterSpacing:1,outline:"none",width:200}}/>
+      {[["all","ALL"],["myth","LEGEND"],["legendary","LEG"],["ultra","ULTRA"],["epic","EPIC"],["rare","RARE"],["common","COM"]].map(([k,l])=><button key={k} onClick={()=>setMf(k)} style={{background:mf===k?`${RC[k]?.border||"#FFB800"}18`:"transparent",border:`1px solid ${mf===k?RC[k]?.border||"#FFB800":"#21262d"}`,borderRadius:6,color:mf===k?RC[k]?.border||"#FFB800":"#374151",padding:"3px 10px",fontSize:9,letterSpacing:1,cursor:"pointer"}}>{l}</button>)}
+     </div>
+     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{mkC.slice(0,80).map((c,i)=>{const own=col.some(x=>x.name===c.name&&x.team===c.team),ca=coins>=c.marketPrice;return<div key={c.uid||i} style={{display:"flex",flexDirection:"column",gap:4}}>
+      <Card card={c} rev={true} sz="sm" badge={own?{text:"OWNED",bg:"#374151"}:null}/>
+      <button onClick={()=>buyMkt(c)} disabled={!ca} style={{width:"100%",background:ca?`${RC[c.rarity]?.border}18`:"transparent",border:`1px solid ${ca?RC[c.rarity]?.border+"55":"#21262d"}`,borderRadius:6,color:ca?RC[c.rarity]?.border:"#374151",fontSize:8,letterSpacing:1,padding:"5px 0",cursor:ca?"pointer":"not-allowed"}}>{ca?`BUY 🪙${fmt(c.marketPrice)}`:`🪙${fmt(c.marketPrice)}`}</button>
+     </div>})}</div>
+    </div>}
+
+   </div>
+  </div>
+ );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
