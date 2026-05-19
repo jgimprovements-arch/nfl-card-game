@@ -157,10 +157,25 @@ function App(){
 
  const unlock=useCallback((id)=>{setAch(prev=>{if(prev.includes(id))return prev;const a=ACH.find(x=>x.id===id);if(a){setCoins(c=>c+a.coins);setTimeout(()=>sT("🏆 "+a.name+" · +🪙"+fmt(a.coins),"#fbbf24"),300)}return[...prev,id]})},[]);
 
+ // ---- derived values (safe even before roster loads) ----
+ const CH=CHAL.find(c=>c.id===chal)||CHAL[0];
+ const luCards0=LS.map(sl=>({sl,c:lu[sl.id]?col.find(x=>x.uid===lu[sl.id]):null}));
+ const filled0=luCards0.filter(x=>x.c);
+ const capUsed0=filled0.reduce((s,x)=>s+salary(x.c),0);
+ const teamCount0={};filled0.forEach(x=>{teamCount0[x.c.team]=(teamCount0[x.c.team]||0)+1});
+ const maxStack0=Math.max(0,...Object.values(teamCount0),0);
+ const legal0=filled0.length===LS.length&&capUsed0<=CH.cap;
+ const uniqueOwned0=new Set(col.map(c=>c.name+c.team)).size;
+ const totalPlayers0=ALL?new Set(ALL.map(c=>c.name+c.team)).size:0;
+ const collPct0=totalPlayers0?Math.round(uniqueOwned0/totalPlayers0*100):0;
+
+ // ---- achievement effects: declared BEFORE any early return (hook rule) ----
+ useEffect(()=>{if(legal0)unlock("legal_team");if(maxStack0>=3)unlock("stack3")},[legal0,maxStack0,unlock]);
+ useEffect(()=>{if(collPct0>=10)unlock("coll_10");if(collPct0>=25)unlock("coll_25");if(collPct0>=50)unlock("coll_50")},[collPct0,unlock]);
+
  if(err)return React.createElement("div",{style:{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,padding:24,textAlign:"center"}},React.createElement("div",{style:{fontSize:18,color:"#ef4444",letterSpacing:2}},"COULD NOT LOAD ROSTER"),React.createElement("div",{style:{fontSize:12,color:"#9CA3AF",maxWidth:420}},"Needs players.json + game.js next to index.html. Error: "+err));
  if(!ALL||!loaded)return React.createElement("div",{style:{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:20,background:"#000308"}},React.createElement("img",{src:"logo.png",alt:"Kashton's Gridiron",style:{width:"min(70vw,360px)",height:"auto",animation:"bP 2s ease-in-out infinite"}}),React.createElement("div",{style:{color:"#ef4444",letterSpacing:4,fontSize:14}},"LOADING…"));
 
- const CH=CHAL.find(c=>c.id===chal)||CHAL[0];
  const PL={myth:ALL.filter(c=>c.rarity==="myth"),legendary:ALL.filter(c=>c.rarity==="legendary"),ultra:ALL.filter(c=>c.rarity==="ultra"),epic:ALL.filter(c=>c.rarity==="epic"),rare:ALL.filter(c=>c.rarity==="rare"),common:ALL.filter(c=>c.rarity==="common")};
  const roll=(rates)=>{const r=Math.random();for(const x of rates){if(r<x.c){const p=PL[x.r];if(p&&p.length)return p[Math.floor(Math.random()*p.length)]}}const p=PL.common.length?PL.common:ALL;return p[Math.floor(Math.random()*p.length)]};
  const rollPack=(id)=>{const p=PT.find(x=>x.id===id);if(!p)return[];const c=[];if(p.lg&&PL.myth.length)c.push({...PL.myth[Math.floor(Math.random()*PL.myth.length)],uid:Math.random()});for(let i=c.length;i<p.n;i++)c.push({...roll(p.rates),uid:Math.random()});return c};
@@ -198,12 +213,10 @@ function App(){
  const maxPossible=LS.length*99;
  const[gL,gC]=grade(teamScore,maxPossible);
  const legal=filled.length===LS.length&&capUsed<=CH.cap;
- useEffect(()=>{if(legal)unlock("legal_team");if(maxStack>=3)unlock("stack3")},[legal,maxStack]);
  const rc=col.reduce((a,c)=>({...a,[c.rarity]:(a[c.rarity]||0)+1}),{});
  const uniqueOwned=new Set(col.map(c=>c.name+c.team)).size;
  const totalPlayers=new Set(ALL.map(c=>c.name+c.team)).size;
  const collPct=totalPlayers?Math.round(uniqueOwned/totalPlayers*100):0;
- useEffect(()=>{if(collPct>=10)unlock("coll_10");if(collPct>=25)unlock("coll_25");if(collPct>=50)unlock("coll_50")},[collPct]);
  const mkC=ALL.filter(c=>{if(mf!=="all"&&c.rarity!==mf)return false;if(msq&&!c.name.toLowerCase().includes(msq.toLowerCase())&&!c.team.toLowerCase().includes(msq.toLowerCase()))return false;return true}).sort((a,b)=>b.ovr-a.ovr);
  const elig=lp?col.filter(c=>lp.pos.includes(c.pos)&&c.ovr<=CH.maxOvr).sort((a,b)=>b.ovr-a.ovr):[];
  const pt=PT.find(p=>p.id===apt)||PT[1];
