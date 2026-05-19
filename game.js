@@ -70,30 +70,29 @@ function tdy(){return new Date().toISOString().slice(0,10)}
 function dB(a,b){return Math.round((new Date(b)-new Date(a))/864e5)}
 var SK="kashton-gridiron-v2";
 var DS={coins:8000,pi:{starter:3,standard:0,gold:0,elite:0,ultimate:0,legend:1,mega:0},col:[],lu:{},chal:"std",lc:"",strk:0,swk:1,sw:0,ach:[]};
-/* card sizing helper */
-function cw(){return Math.min(148,Math.floor((window.innerWidth-48)/2.5))}
+/* fixed card width — original big readable size */
+function cw(){return 150}
 
 function Card(p){
  var card=p.card,rev=p.rev,onClick=p.onClick,sz=p.sz||"md",badge=p.badge;
  var c=RC[card.rarity]||RC.common;
  var im=card.rarity==="myth",il=card.rarity==="legendary",iu=card.rarity==="ultra",ie=card.rarity==="epic",ir=card.rarity==="rare";
- var w=sz==="sm"?cw()*0.78:cw(),h=sz==="sm"?w*1.52:w*1.55;
+ var w=sz==="sm"?120:150,h=sz==="sm"?172:228;
  var ga=im?"gM":il?"gL":iu?"gU":ie?"gE":ir?"gR":"none";
- var fs=w<120;
  return ce("div",{onClick:onClick,style:{width:w,flexShrink:0,cursor:onClick?"pointer":"default"}},
-  ce("div",{style:{width:"100%",height:h,borderRadius:12,overflow:"hidden",position:"relative",background:rev?c.bg:"linear-gradient(140deg,#0d1117,#161b22,#0d1117)",border:"2px solid "+(rev?c.border:"#21262d"),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",padding:"8px 6px 8px",animation:rev?"cFlip .4s ease both,"+ga+" 2.2s ease-in-out .5s infinite":"bP 2.8s ease-in-out infinite"}},
-   !rev&&ce("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}},ce("div",{style:{fontSize:Math.max(28,w*.24)}},"🏈"),ce("div",{style:{fontSize:fs?6:7,letterSpacing:3,color:"#3d4451"}},"TAP TO REVEAL")),
+  ce("div",{style:{width:"100%",height:h,borderRadius:12,overflow:"hidden",position:"relative",background:rev?c.bg:"linear-gradient(140deg,#0d1117,#161b22,#0d1117)",border:"2px solid "+(rev?c.border:"#21262d"),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",padding:"8px 8px 9px",animation:rev?"cFlip .4s ease both,"+ga+" 2.2s ease-in-out .5s infinite":"bP 2.8s ease-in-out infinite"}},
+   !rev&&ce("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}},ce("div",{style:{fontSize:36}},"🏈"),ce("div",{style:{fontSize:7,letterSpacing:3,color:"#3d4451"}},"TAP TO REVEAL")),
    rev&&ce(F,null,
     (im||il||iu)&&ce("div",{style:{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%)",backgroundSize:"300% 100%",animation:"shimmer 2.2s linear infinite"}}),
     ce("div",{style:{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:1}},
-     ce("div",{style:{fontSize:fs?5:6,letterSpacing:1.5,fontWeight:700,padding:"2px 4px",borderRadius:3,color:im?"#000":"#fff",background:im?"linear-gradient(90deg,#f59e0b,#e879f9,#60A5FA)":c.glow,animation:im?"rb 4s linear infinite":"none"}},c.label),
-     ce("div",{style:{fontSize:fs?12:14,fontWeight:700,color:im?"#fde68a":c.border}},card.ovr,ce("span",{style:{fontSize:5,opacity:.7}}," OVR"))),
-    ce("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",flex:"1 0 auto"}},im?ce("span",{style:{fontSize:Math.max(22,w*.17),filter:"drop-shadow(0 0 16px "+c.glow+")"}},"⭐"):ce(TeamArt,{team:card.team,size:Math.max(18,w*.16),glow:(il?12:8)+"px "+c.glow})),
+     ce("div",{style:{fontSize:6,letterSpacing:1.5,fontWeight:700,padding:"2px 5px",borderRadius:3,color:im?"#000":"#fff",background:im?"linear-gradient(90deg,#f59e0b,#e879f9,#60A5FA)":c.glow,animation:im?"rb 4s linear infinite":"none"}},c.label),
+     ce("div",{style:{fontSize:14,fontWeight:700,color:im?"#fde68a":c.border}},card.ovr,ce("span",{style:{fontSize:6,opacity:.7}}," OVR"))),
+    ce("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",flex:"1 0 auto"}},im?ce("span",{style:{fontSize:sz==="sm"?22:28,filter:"drop-shadow(0 0 16px "+c.glow+")"}},"⭐"):ce(TeamArt,{team:card.team,size:sz==="sm"?20:24,glow:(il?12:8)+"px "+c.glow})),
     ce("div",{style:{textAlign:"center",width:"100%",zIndex:1}},
-     ce("div",{style:{fontSize:card.name.length>18?(fs?6:8):card.name.length>14?(fs?7:9):(fs?9:11),fontWeight:700,color:im?"#fde68a":"#F1F5F9",lineHeight:1.15}},card.name),
-     ce("div",{style:{fontSize:fs?6:7,color:c.border+"cc",letterSpacing:1.5,marginTop:1}},card.pos+" · "+card.team)),
-    ce("div",{style:{marginTop:2,padding:"2px 7px",borderRadius:14,background:"rgba(0,0,0,.4)",border:"1px solid "+c.border+"44",fontSize:fs?8:10,fontWeight:700,color:"#fde68a"}},fS(sal(card))),
-    badge&&ce("div",{style:{position:"absolute",top:3,right:3,background:badge.bg,borderRadius:10,padding:"2px 5px",fontSize:6,color:"#fff",letterSpacing:1}},badge.text)
+     ce("div",{style:{fontSize:card.name.length>18?(sz==="sm"?7:8.5):card.name.length>14?(sz==="sm"?8:10):(sz==="sm"?10:12),fontWeight:700,color:im?"#fde68a":"#F1F5F9",lineHeight:1.15}},card.name),
+     ce("div",{style:{fontSize:7,color:c.border+"cc",letterSpacing:2,marginTop:1}},card.pos+" · "+card.team)),
+    ce("div",{style:{marginTop:2,padding:"3px 8px",borderRadius:14,background:"rgba(0,0,0,.4)",border:"1px solid "+c.border+"44",fontSize:sz==="sm"?9:10,fontWeight:700,color:"#fde68a"}},fS(sal(card))),
+    badge&&ce("div",{style:{position:"absolute",top:4,right:4,background:badge.bg,borderRadius:10,padding:"2px 6px",fontSize:7,color:"#fff",letterSpacing:1}},badge.text)
    )
   )
  );
@@ -101,16 +100,16 @@ function Card(p){
 function Slot(p){
  var slot=p.slot,card=p.card,onClick=p.onClick;
  var c=card?RC[card.rarity]||RC.common:null;
- var w=Math.min(90,Math.floor((window.innerWidth-64)/4));
- return ce("div",{onClick:function(){onClick(slot)},style:{width:w,height:w*1.3,borderRadius:10,cursor:"pointer",border:"1.5px solid "+(c?c.border+"77":"#21262d"),background:c?c.bg:"rgba(255,255,255,.02)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,flexShrink:0}},
+ var w=90;
+ return ce("div",{onClick:function(){onClick(slot)},style:{width:w,height:118,borderRadius:10,cursor:"pointer",border:"1.5px solid "+(c?c.border+"77":"#21262d"),background:c?c.bg:"rgba(255,255,255,.02)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,flexShrink:0}},
   card?ce(F,null,
-   ce("div",{style:{fontSize:5,color:c.border}},"OVR "+card.ovr),
-   ce("div",null,card.rarity==="myth"?ce("span",{style:{fontSize:Math.max(16,w*.2)}},"⭐"):ce(TeamArt,{team:card.team,size:Math.max(12,w*.18),glow:"5px "+c.glow})),
-   ce("div",{style:{fontSize:card.name.length>14?6:7,fontWeight:700,color:"#F1F5F9",textAlign:"center",lineHeight:1.2,padding:"0 3px"}},card.name),
-   ce("div",{style:{fontSize:6,color:c.border+"cc"}},slot.label)
+   ce("div",{style:{fontSize:6,color:c.border}},"OVR "+card.ovr),
+   ce("div",null,card.rarity==="myth"?ce("span",{style:{fontSize:20}},"⭐"):ce(TeamArt,{team:card.team,size:16,glow:"5px "+c.glow})),
+   ce("div",{style:{fontSize:card.name.length>14?7:8.5,fontWeight:700,color:"#F1F5F9",textAlign:"center",lineHeight:1.2,padding:"0 4px"}},card.name),
+   ce("div",{style:{fontSize:7,color:c.border+"cc"}},slot.label)
   ):ce(F,null,
-   ce("div",{style:{fontSize:Math.max(16,w*.22),opacity:.3}},slot.icon),
-   ce("div",{style:{fontSize:8,color:"#374151",letterSpacing:1}},slot.label)
+   ce("div",{style:{fontSize:20,opacity:.3}},slot.icon),
+   ce("div",{style:{fontSize:9,color:"#374151",letterSpacing:1}},slot.label)
   )
  );
 }
@@ -270,7 +269,7 @@ function App(){
      [["all","ALL"],["myth","LEG"],["legendary","LGY"],["ultra","ULT"],["epic","EPIC"],["rare","RARE"],["common","COM"]].map(function(kv){return fBtn(kv,filterR,setFilterR,RC[kv[0]])}),
      [["ovr","OVR"],["rarity","RAR"],["sal","$"],["team","TM"]].map(function(kv){return fBtn(kv,sortBy,setSortBy,{border:"#FFB800"})})),
     fc.length===0?ce("div",{style:{textAlign:"center",padding:"60px 0",color:"#21262d",fontSize:14}},"NO CARDS YET"):
-    ce("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax("+cw()+"px,1fr))",gap:8,justifyItems:"center"}},fc.map(function(c){return ce("div",{key:c.uid,style:{display:"flex",flexDirection:"column",gap:4,width:cw()}},
+    ce("div",{style:{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}},fc.map(function(c){return ce("div",{key:c.uid,style:{display:"flex",flexDirection:"column",gap:4,width:150}},
      ce(Card,{card:c,rev:true}),
      sellMode&&Object.keys(lu).map(function(k){return lu[k]}).indexOf(c.uid)<0&&ce("button",{onClick:function(){sellCard(c.uid)},style:btn44({width:"100%",background:"rgba(0,0,0,.5)",border:"1px solid "+((RC[c.rarity]||{}).border||"#888")+"44",color:(RC[c.rarity]||{}).border||"#888",fontSize:11,padding:"8px 0"})},"SELL 🪙"+fmt(c.value)))}))),
 
@@ -285,7 +284,7 @@ function App(){
 
    scr==="pick"&&lp&&ce("div",{style:{padding:"12px 10px"}},
     ce("div",{style:{display:"flex",alignItems:"center",gap:12,marginBottom:14}},ce("button",{onClick:function(){setLp(null);setScr("lineup")},style:btn44({background:"transparent",border:"1px solid #21262d",color:"#4a5568",padding:"8px 16px",fontSize:12})},"← BACK"),ce("div",null,ce("div",{style:{fontSize:15,fontWeight:700,color:"#FFB800"}},lp.label),ce("div",{style:{fontSize:11,color:"#374151"}},"Room: "+fS(Math.max(0,CH.cap-capUsed))))),
-    ce("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax("+cw()+"px,1fr))",gap:8,justifyItems:"center"}},elig.map(function(c){return ce("div",{key:c.uid,style:{display:"flex",flexDirection:"column",gap:4,width:cw()}},ce(Card,{card:c,rev:true,onClick:function(){assign(c.uid)}}),ce("button",{onClick:function(){assign(c.uid)},style:btn44({width:"100%",background:((RC[c.rarity]||{}).border||"#888")+"18",border:"1px solid "+((RC[c.rarity]||{}).border||"#888")+"55",color:(RC[c.rarity]||{}).border||"#888",fontSize:11,padding:"8px 0"})},"SELECT"))}))),
+    ce("div",{style:{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}},elig.map(function(c){return ce("div",{key:c.uid,style:{display:"flex",flexDirection:"column",gap:4,width:150}},ce(Card,{card:c,rev:true,onClick:function(){assign(c.uid)}}),ce("button",{onClick:function(){assign(c.uid)},style:btn44({width:"100%",background:((RC[c.rarity]||{}).border||"#888")+"18",border:"1px solid "+((RC[c.rarity]||{}).border||"#888")+"55",color:(RC[c.rarity]||{}).border||"#888",fontSize:11,padding:"8px 0"})},"SELECT"))}))),
 
    scr==="season"&&ce("div",{style:{padding:"12px 14px",maxWidth:600,margin:"0 auto"}},
     ce("div",{style:{fontSize:16,fontWeight:700,letterSpacing:3,color:"#FFB800",marginBottom:4}},"SOLO SEASON"),
@@ -304,7 +303,7 @@ function App(){
     ce("div",{style:{marginBottom:10}},ce("div",{style:{fontSize:16,fontWeight:700,letterSpacing:3,color:"#FFB800"}},"MARKET"),ce("div",{style:{fontSize:11,color:"#374151"}},"🪙"+fmt(coins))),
     ce("div",{style:{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}},ce("input",{value:msq,onChange:function(e){setMsq(e.target.value)},placeholder:"Search...",style:{background:"rgba(255,255,255,.05)",border:"1px solid #21262d",borderRadius:8,color:"#F1F5F9",padding:"8px 12px",fontSize:13,outline:"none",flex:1,minWidth:140}}),
      [["all","ALL"],["myth","LEG"],["legendary","LGY"],["epic","EPIC"],["rare","RARE"]].map(function(kv){return fBtn(kv,mf,setMf,RC[kv[0]])})),
-    ce("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax("+(cw()*0.78)+"px,1fr))",gap:8,justifyItems:"center"}},mkC.slice(0,60).map(function(c,i){var own=col.some(function(x){return x.name===c.name&&x.team===c.team}),ca=coins>=c.marketPrice;return ce("div",{key:c.uid||i,style:{display:"flex",flexDirection:"column",gap:4,width:cw()*0.78}},ce(Card,{card:c,rev:true,sz:"sm",badge:own?{text:"OWNED",bg:"#374151"}:null}),ce("button",{onClick:function(){buyMkt(c)},disabled:!ca,style:btn44({width:"100%",background:ca?((RC[c.rarity]||{}).border||"#888")+"18":"transparent",border:"1px solid "+(ca?((RC[c.rarity]||{}).border||"#888")+"55":"#21262d"),color:ca?(RC[c.rarity]||{}).border:"#374151",fontSize:10,padding:"8px 0",cursor:ca?"pointer":"not-allowed"})},ca?"BUY 🪙"+fmt(c.marketPrice):"🪙"+fmt(c.marketPrice)))}))),
+    ce("div",{style:{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}},mkC.slice(0,60).map(function(c,i){var own=col.some(function(x){return x.name===c.name&&x.team===c.team}),ca=coins>=c.marketPrice;return ce("div",{key:c.uid||i,style:{display:"flex",flexDirection:"column",gap:4,width:120}},ce(Card,{card:c,rev:true,sz:"sm",badge:own?{text:"OWNED",bg:"#374151"}:null}),ce("button",{onClick:function(){buyMkt(c)},disabled:!ca,style:btn44({width:"100%",background:ca?((RC[c.rarity]||{}).border||"#888")+"18":"transparent",border:"1px solid "+(ca?((RC[c.rarity]||{}).border||"#888")+"55":"#21262d"),color:ca?(RC[c.rarity]||{}).border:"#374151",fontSize:10,padding:"8px 0",cursor:ca?"pointer":"not-allowed"})},ca?"BUY 🪙"+fmt(c.marketPrice):"🪙"+fmt(c.marketPrice)))}))),
 
    scr==="trade"&&ce("div",{style:{padding:"12px 14px",maxWidth:600,margin:"0 auto"}},
     ce("div",{style:{fontSize:16,fontWeight:700,letterSpacing:3,color:"#FFB800",marginBottom:12}},"TRADE"),
