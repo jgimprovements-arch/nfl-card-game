@@ -2,16 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000308">
 <title>Kashton's Gridiron</title>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Anton&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Oswald','Arial Narrow',sans-serif}
-body{background:#000308;color:#F1F5F9}
-button{cursor:pointer}
-input,textarea{font-family:inherit}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Oswald','Arial Narrow',sans-serif;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{background:#000308;color:#F1F5F9;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+#root{height:100%;overflow:hidden}
+button{cursor:pointer;-webkit-appearance:none;border:none;background:none}
+input,textarea{font-family:inherit;-webkit-appearance:none}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#FFB80044;border-radius:2px}
 @keyframes cFlip{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 @keyframes shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
