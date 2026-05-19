@@ -3,27 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NFL Card Packs</title>
+<title>NFL Card GM</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Oswald','Arial Narrow',sans-serif}
 body{background:#000308;color:#F1F5F9}
 button{cursor:pointer}
+input,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#FFB80044;border-radius:2px}
-@keyframes cFlip{from{opacity:0;transform:rotateY(90deg) scale(.8)}to{opacity:1;transform:rotateY(0)}}
+@keyframes cFlip{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 @keyframes shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
-@keyframes gMyth{0%,100%{box-shadow:0 0 22px 5px #e879f9,0 0 55px 10px #a855f755}50%{box-shadow:0 0 34px 9px #f0abfc,0 0 75px 18px #a855f788}}
-@keyframes gLeg{0%,100%{box-shadow:0 0 16px 4px #FFB800}50%{box-shadow:0 0 28px 7px #FFB800}}
-@keyframes gUltra{0%,100%{box-shadow:0 0 14px 3px #4ade80}50%{box-shadow:0 0 24px 6px #86efac}}
-@keyframes gEpic{0%,100%{box-shadow:0 0 12px 3px #A855F7}50%{box-shadow:0 0 22px 6px #C084FC}}
-@keyframes gRare{0%,100%{box-shadow:0 0 7px 2px #3B82F6}50%{box-shadow:0 0 14px 4px #60A5FA}}
-@keyframes bPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.1)}}
-@keyframes rainbow{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(360deg)}}
-@keyframes tGlow{0%,100%{text-shadow:0 0 20px #FFB80066}50%{text-shadow:0 0 36px #FFB800aa}}
-@keyframes gridPulse{0%,100%{opacity:.04}50%{opacity:.08}}
-@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes toastIn{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes pShake{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-6deg) scale(1.05)}50%{transform:rotate(6deg) scale(1.05)}75%{transform:rotate(-3deg) scale(1.02)}}
-@keyframes pGlow{0%,100%{filter:drop-shadow(0 0 16px #FFB80099)}50%{filter:drop-shadow(0 0 34px #FFB800cc)}}
+@keyframes gM{0%,100%{box-shadow:0 0 22px 5px #e879f9}50%{box-shadow:0 0 34px 9px #f0abfc}}
+@keyframes gL{0%,100%{box-shadow:0 0 16px 4px #FFB800}50%{box-shadow:0 0 28px 7px #FFB800}}
+@keyframes gU{0%,100%{box-shadow:0 0 14px 3px #4ade80}50%{box-shadow:0 0 24px 6px #86efac}}
+@keyframes gE{0%,100%{box-shadow:0 0 12px 3px #A855F7}50%{box-shadow:0 0 22px 6px #C084FC}}
+@keyframes gR{0%,100%{box-shadow:0 0 7px 2px #3B82F6}50%{box-shadow:0 0 14px 4px #60A5FA}}
+@keyframes bP{0%,100%{filter:brightness(1)}50%{filter:brightness(1.1)}}
+@keyframes rb{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(360deg)}}
+@keyframes tG{0%,100%{text-shadow:0 0 20px #FFB80066}50%{text-shadow:0 0 36px #FFB800aa}}
+@keyframes su{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes tI{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
 </style>
 </head>
 <body>
@@ -34,7 +32,9 @@ button{cursor:pointer}
 <script type="text/babel">
 const {useState,useEffect,useCallback}=React;
 const ROSTER_URL="players.json";
+const CAP=100000000; // $100M
 function val(r,p){const b={myth:40000,legendary:8000,ultra:3500,epic:1500,rare:300,common:50};return Math.round((b[r]||50)*p)}
+function salary(c){return c.value*1000} // scale coin value to $ salary
 function mp(v){return Math.round(v*2.5)}
 const RC={
  myth:{label:"LEGEND",bg:"linear-gradient(135deg,#0a0012,#1a0533,#6b21a8,#a855f7,#fbbf24,#a855f7,#1a0533)",border:"#f0abfc",glow:"#e879f9"},
@@ -45,14 +45,9 @@ const RC={
  common:{label:"COMMON",bg:"linear-gradient(150deg,#1f2937,#374151,#6b7280)",border:"#9CA3AF",glow:"#6B7280"}
 };
 const RO={myth:0,legendary:1,ultra:2,epic:3,rare:4,common:5};
-const PI={QB:"🏈",RB:"💨",WR:"⚡",TE:"🎯",DE:"🛡️",DT:"🦾",LB:"🔥",CB:"🔒",S:"👁️",K:"🦵",OT:"💪",G:"💪",C:"💪"};
 const TS={ARI:"ari",ATL:"atl",BAL:"bal",BUF:"buf",CAR:"car",CHI:"chi",CIN:"cin",CLE:"cle",DAL:"dal",DEN:"den",DET:"det",GB:"gb",HOU:"hou",IND:"ind",JAX:"jax",KC:"kc",LV:"lv",LAC:"lac",LAR:"lar",MIA:"mia",MIN:"min",NE:"ne",NO:"no",NYG:"nyg",NYJ:"nyj",PHI:"phi",PIT:"pit",SF:"sf",SEA:"sea",TB:"tb",TEN:"ten",WAS:"wsh"};
 function logo(t){const s=TS[t];return s?"https://a.espncdn.com/i/teamlogos/nfl/500/"+s+".png":null}
-function TeamArt({team,size,glow}){
- const[ok,setOk]=useState(true);const u=logo(team);
- if(!u||!ok)return <span style={{fontSize:size,filter:"drop-shadow(0 0 "+glow+")"}}>🏈</span>;
- return <img src={u} alt="" onError={()=>setOk(false)} style={{width:size*1.6,height:size*1.6,objectFit:"contain",filter:"drop-shadow(0 0 "+glow+")"}}/>;
-}
+function TeamArt({team,size,glow}){const[ok,setOk]=useState(true);const u=logo(team);if(!u||!ok)return <span style={{fontSize:size,filter:"drop-shadow(0 0 "+glow+")"}}>🏈</span>;return <img src={u} alt="" onError={()=>setOk(false)} style={{width:size*1.6,height:size*1.6,objectFit:"contain",filter:"drop-shadow(0 0 "+glow+")"}}/>}
 const LS=[
  {id:"QB1",label:"QB",pos:["QB"],icon:"🏈"},{id:"RB1",label:"RB1",pos:["RB"],icon:"💨"},{id:"RB2",label:"RB2",pos:["RB"],icon:"💨"},
  {id:"WR1",label:"WR1",pos:["WR"],icon:"⚡"},{id:"WR2",label:"WR2",pos:["WR"],icon:"⚡"},{id:"WR3",label:"WR3",pos:["WR"],icon:"⚡"},
@@ -71,57 +66,58 @@ const PT=[
  {id:"legend",name:"Legends Pack",emoji:"⭐",cost:2500,desc:"1 guaranteed Legend",color:"#e879f9",border:"#f0abfc",rates:[{r:"myth",c:.25},{r:"legendary",c:.45},{r:"ultra",c:.70},{r:"epic",c:1}],n:5,lg:true},
  {id:"mega",name:"Mega Pack",emoji:"🎰",cost:3500,desc:"12 cards mixed!",color:"#fb923c",border:"#fdba74",rates:[{r:"legendary",c:.04},{r:"ultra",c:.14},{r:"epic",c:.32},{r:"rare",c:.68},{r:"common",c:1}],n:12}
 ];
-function eP(p){let r=p.rarity;if(r==="epic"&&p.prestige>=1.5)r="ultra";const v=val(r,p.prestige);return{...p,rarity:r,value:v,marketPrice:mp(v),uid:p.name+p.team}}
-function eL(p){const v=val("myth",p.prestige);return{...p,rarity:"myth",value:v,marketPrice:mp(v),uid:p.name+p.team+"L"}}
+const CHALLENGES=[
+ {id:"std",name:"Standard",desc:"Full $100M cap, build the best team",cap:CAP,maxOvr:99},
+ {id:"budget",name:"Budget Build",desc:"Only $80M cap",cap:80000000,maxOvr:99},
+ {id:"underdog",name:"Underdog",desc:"No player above 90 OVR",cap:CAP,maxOvr:90},
+ {id:"shoestring",name:"Shoestring",desc:"$60M cap, no player above 93 OVR",cap:60000000,maxOvr:93}
+];
+function eP(p){let r=p.rarity;if(r==="epic"&&p.prestige>=1.5)r="ultra";const v=val(r,p.prestige);return{...p,rarity:r,value:v,marketPrice:mp(v),ovr:p.ovr||70,uid:p.name+p.team}}
+function eL(p){const v=val("myth",p.prestige);return{...p,rarity:"myth",value:v,marketPrice:mp(v),ovr:p.ovr||95,uid:p.name+p.team+"L"}}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+"M";if(n>=1e3)return(n/1e3).toFixed(n%1e3===0?0:1)+"K";return String(n)}
-const SK="nfl-packs-standalone-v1";
-const DS={coins:8000,pi:{starter:3,standard:0,gold:0,elite:0,ultimate:0,legend:1,mega:0},col:[],lu:{}};
+function fmtSal(n){if(n>=1e6)return"$"+(n/1e6).toFixed(1)+"M";if(n>=1e3)return"$"+(n/1e3).toFixed(0)+"K";return"$"+n}
+function grade(score,max){const pct=max?score/max:0;if(pct>=.95)return["A+","#4ade80"];if(pct>=.88)return["A","#4ade80"];if(pct>=.80)return["B","#a3e635"];if(pct>=.70)return["C","#FFB800"];if(pct>=.55)return["D","#fb923c"];return["F","#ef4444"]}
+const SK="nfl-gm-v1";
+const DS={coins:8000,pi:{starter:3,standard:0,gold:0,elite:0,ultimate:0,legend:1,mega:0},col:[],lu:{},capMoney:CAP,challenge:"std"};
 
 function Card({card,rev,onClick,sz,badge}){
  sz=sz||"md";const c=RC[card.rarity]||RC.common;
  const im=card.rarity==="myth",il=card.rarity==="legendary",iu=card.rarity==="ultra",ie=card.rarity==="epic",ir=card.rarity==="rare";
- const w=sz==="sm"?118:148,h=sz==="sm"?168:215;
- const ga=im?"gMyth":il?"gLeg":iu?"gUltra":ie?"gEpic":ir?"gRare":"none";
+ const w=sz==="sm"?118:148,h=sz==="sm"?180:230;
+ const ga=im?"gM":il?"gL":iu?"gU":ie?"gE":ir?"gR":"none";
  return(
   <div onClick={onClick} style={{width:w,flexShrink:0,cursor:onClick?"pointer":"default"}}>
-   <div style={{width:"100%",height:h,borderRadius:12,overflow:"hidden",position:"relative",
-    background:rev?c.bg:"linear-gradient(140deg,#0d1117,#161b22,#0d1117)",
-    border:"2px solid "+(rev?c.border:"#21262d"),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",padding:"8px 8px 9px",
-    animation:rev?"cFlip .4s cubic-bezier(.4,0,.2,1) both,"+ga+" 2.2s ease-in-out .5s infinite":"bPulse 2.8s ease-in-out infinite"}}>
+   <div style={{width:"100%",height:h,borderRadius:12,overflow:"hidden",position:"relative",background:rev?c.bg:"linear-gradient(140deg,#0d1117,#161b22,#0d1117)",border:"2px solid "+(rev?c.border:"#21262d"),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",padding:"8px 8px 9px",animation:rev?"cFlip .4s ease both,"+ga+" 2.2s ease-in-out .5s infinite":"bP 2.8s ease-in-out infinite"}}>
     {!rev&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}><div style={{fontSize:36}}>🏈</div><div style={{fontSize:7,letterSpacing:3,color:"#3d4451"}}>TAP TO REVEAL</div></div>}
     {rev&&<React.Fragment>
      {(im||il||iu)&&<div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%)",backgroundSize:"300% 100%",animation:"shimmer 2.2s linear infinite"}}/>}
-     {im&&<div style={{position:"absolute",inset:-2,borderRadius:14,zIndex:-1,background:"linear-gradient(45deg,#f59e0b,#e879f9,#60A5FA,#34d399,#f59e0b)",backgroundSize:"300% 300%",animation:"shimmer 3s linear infinite"}}/>}
      <div style={{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:1}}>
-      <div style={{fontSize:6,letterSpacing:1.5,fontWeight:700,padding:"2px 5px",borderRadius:3,color:im?"#000":"#fff",background:im?"linear-gradient(90deg,#f59e0b,#e879f9,#60A5FA)":c.glow,animation:im?"rainbow 4s linear infinite":"none"}}>{c.label}</div>
-      <div style={{fontSize:8,color:"rgba(255,255,255,.65)"}}>{card.team}{im&&card.era?" · "+card.era:""}</div>
+      <div style={{fontSize:6,letterSpacing:1.5,fontWeight:700,padding:"2px 5px",borderRadius:3,color:im?"#000":"#fff",background:im?"linear-gradient(90deg,#f59e0b,#e879f9,#60A5FA)":c.glow,animation:im?"rb 4s linear infinite":"none"}}>{c.label}</div>
+      <div style={{fontSize:14,fontWeight:700,color:im?"#fde68a":c.border,lineHeight:1}}>{card.ovr}<span style={{fontSize:6,opacity:.7}}> OVR</span></div>
      </div>
-     <div style={{display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>{im?<span style={{fontSize:28,filter:"drop-shadow(0 0 16px "+c.glow+")"}}>⭐</span>:<TeamArt team={card.team} size={sz==="sm"?22:28} glow={(il?12:8)+"px "+c.glow}/>}</div>
+     <div style={{display:"flex",alignItems:"center",justifyContent:"center"}}>{im?<span style={{fontSize:26,filter:"drop-shadow(0 0 16px "+c.glow+")"}}>⭐</span>:<TeamArt team={card.team} size={sz==="sm"?20:24} glow={(il?12:8)+"px "+c.glow}/>}</div>
      <div style={{textAlign:"center",width:"100%",zIndex:1}}>
-      <div style={{fontSize:card.name.length>18?(sz==="sm"?7:8.5):card.name.length>14?(sz==="sm"?8:10):(sz==="sm"?10:12),fontWeight:700,color:im?"#fde68a":"#F1F5F9",lineHeight:1.15,textShadow:"0 0 6px "+c.glow+"66"}}>{card.name}</div>
-      <div style={{fontSize:7,color:c.border+"cc",letterSpacing:2,marginTop:1}}>{card.pos}</div>
+      <div style={{fontSize:card.name.length>18?(sz==="sm"?7:8.5):card.name.length>14?(sz==="sm"?8:10):(sz==="sm"?10:12),fontWeight:700,color:im?"#fde68a":"#F1F5F9",lineHeight:1.15}}>{card.name}</div>
+      <div style={{fontSize:7,color:c.border+"cc",letterSpacing:2,marginTop:1}}>{card.pos} · {card.team}</div>
      </div>
-     <div style={{marginTop:4,padding:"3px 10px",borderRadius:16,background:"rgba(0,0,0,.35)",border:"1px solid "+c.border+"44",display:"flex",alignItems:"center",gap:4}}>
-      <span style={{fontSize:10}}>🪙</span><span style={{fontSize:sz==="sm"?10:11,fontWeight:700,color:im?"#fbbf24":c.border}}>{fmt(card.value)}</span>
-     </div>
+     <div style={{marginTop:2,padding:"3px 8px",borderRadius:14,background:"rgba(0,0,0,.4)",border:"1px solid "+c.border+"44",fontSize:sz==="sm"?9:10,fontWeight:700,color:"#fde68a"}}>{fmtSal(salary(card))}</div>
      {badge&&<div style={{position:"absolute",top:4,right:4,background:badge.bg,borderRadius:10,padding:"2px 6px",fontSize:7,color:"#fff",letterSpacing:1}}>{badge.text}</div>}
     </React.Fragment>}
    </div>
   </div>
  );
 }
-
 function Slot({slot,card,onClick}){
  const c=card?RC[card.rarity]||RC.common:null;
  return(
-  <div onClick={()=>onClick(slot)} style={{width:88,height:110,borderRadius:10,cursor:"pointer",border:"1.5px solid "+(c?c.border+"77":"#21262d"),background:c?c.bg:"rgba(255,255,255,.02)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,flexShrink:0}}>
+  <div onClick={()=>onClick(slot)} style={{width:90,height:118,borderRadius:10,cursor:"pointer",border:"1.5px solid "+(c?c.border+"77":"#21262d"),background:c?c.bg:"rgba(255,255,255,.02)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,flexShrink:0}}>
    {card?<React.Fragment>
-    <div>{card.rarity==="myth"?<span style={{fontSize:22}}>⭐</span>:<TeamArt team={card.team} size={18} glow={"6px "+c.glow}/>}</div>
+    <div style={{fontSize:6,color:c.border}}>OVR {card.ovr}</div>
+    <div>{card.rarity==="myth"?<span style={{fontSize:20}}>⭐</span>:<TeamArt team={card.team} size={16} glow={"6px "+c.glow}/>}</div>
     <div style={{fontSize:card.name.length>14?7:8.5,fontWeight:700,color:"#F1F5F9",textAlign:"center",lineHeight:1.2,padding:"0 4px"}}>{card.name}</div>
-    <div style={{fontSize:7,color:c.border+"cc",letterSpacing:1}}>{slot.label}</div>
-    <div style={{fontSize:8,color:c.border}}>🪙{fmt(card.value)}</div>
+    <div style={{fontSize:7,color:c.border+"cc"}}>{slot.label} · {fmtSal(salary(card))}</div>
    </React.Fragment>:<React.Fragment>
-    <div style={{fontSize:22,opacity:.3}}>{slot.icon}</div>
+    <div style={{fontSize:20,opacity:.3}}>{slot.icon}</div>
     <div style={{fontSize:9,color:"#374151",letterSpacing:2}}>{slot.label}</div>
     <div style={{fontSize:7,color:"#21262d"}}>EMPTY</div>
    </React.Fragment>}
@@ -136,156 +132,238 @@ function App(){
  const[pi,setPi]=useState(DS.pi);
  const[col,setCol]=useState(DS.col);
  const[lu,setLu]=useState(DS.lu);
+ const[chal,setChal]=useState("std");
  const[scr,setScr]=useState("home");
  const[oc,setOc]=useState([]);
  const[rev,setRev]=useState([]);
  const[allR,setAllR]=useState(false);
  const[toast,setToast]=useState(null);
- const[sortBy,setSortBy]=useState("rarity");
+ const[sortBy,setSortBy]=useState("ovr");
  const[filterR,setFilterR]=useState("all");
  const[sellMode,setSellMode]=useState(false);
  const[mf,setMf]=useState("all");
- const[ms,setMs]=useState("");
+ const[msq,setMsq]=useState("");
  const[lp,setLp]=useState(null);
  const[apt,setApt]=useState("standard");
  const[shk,setShk]=useState(false);
  const[loaded,setLoaded]=useState(false);
+ const[tradeOut,setTradeOut]=useState([]);
+ const[tradeCash,setTradeCash]=useState(0);
+ const[tradeCode,setTradeCode]=useState("");
+ const[importCode,setImportCode]=useState("");
+ const[cmpA,setCmpA]=useState("");
+ const[cmpB,setCmpB]=useState("");
 
- useEffect(()=>{
-  fetch(ROSTER_URL).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
-   .then(d=>{const act=(d.active||[]).map(eP);const leg=(d.legends||[]).map(eL);setALL([...act,...leg])})
-   .catch(e=>setErr(e.message));
- },[]);
- useEffect(()=>{
-  try{const r=localStorage.getItem(SK);if(r){const s=JSON.parse(r);setCoins(s.coins??DS.coins);setPi(s.pi??DS.pi);setCol(s.col??[]);setLu(s.lu??{})}}catch(_){}
-  setLoaded(true);
- },[]);
- const save=useCallback((c,p,co,l)=>{try{localStorage.setItem(SK,JSON.stringify({coins:c,pi:p,col:co,lu:l}))}catch(_){}},[]);
- useEffect(()=>{if(loaded)save(coins,pi,col,lu)},[coins,pi,col,lu,loaded,save]);
- const sT=(m,c)=>{setToast({m,c:c||"#FFB800"});setTimeout(()=>setToast(null),2400)};
+ useEffect(()=>{fetch(ROSTER_URL).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(d=>{setALL([...(d.active||[]).map(eP),...(d.legends||[]).map(eL)])}).catch(e=>setErr(e.message))},[]);
+ useEffect(()=>{try{const r=localStorage.getItem(SK);if(r){const s=JSON.parse(r);setCoins(s.coins??DS.coins);setPi(s.pi??DS.pi);setCol(s.col??[]);setLu(s.lu??{});setChal(s.chal??"std")}}catch(_){}setLoaded(true)},[]);
+ const save=useCallback((c,p,co,l,ch)=>{try{localStorage.setItem(SK,JSON.stringify({coins:c,pi:p,col:co,lu:l,chal:ch}))}catch(_){}},[]);
+ useEffect(()=>{if(loaded)save(coins,pi,col,lu,chal)},[coins,pi,col,lu,chal,loaded,save]);
+ const sT=(m,c)=>{setToast({m,c:c||"#FFB800"});setTimeout(()=>setToast(null),2600)};
 
- if(err)return<div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,padding:24,textAlign:"center"}}>
-  <div style={{fontSize:18,color:"#ef4444",letterSpacing:2}}>COULD NOT LOAD ROSTER</div>
-  <div style={{fontSize:12,color:"#9CA3AF",maxWidth:420,lineHeight:1.6}}>Needs <b>players.json</b> next to this file. Error: {err}</div>
- </div>;
- if(!ALL||!loaded)return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#FFB800",letterSpacing:4,fontSize:16}}>LOADING ROSTER…</div>;
+ if(err)return<div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,padding:24,textAlign:"center"}}><div style={{fontSize:18,color:"#ef4444",letterSpacing:2}}>COULD NOT LOAD ROSTER</div><div style={{fontSize:12,color:"#9CA3AF",maxWidth:420}}>Needs <b>players.json</b> next to this file. Error: {err}</div></div>;
+ if(!ALL||!loaded)return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#FFB800",letterSpacing:4,fontSize:16}}>LOADING…</div>;
 
+ const CH=CHALLENGES.find(c=>c.id===chal)||CHALLENGES[0];
  const PL={myth:ALL.filter(c=>c.rarity==="myth"),legendary:ALL.filter(c=>c.rarity==="legendary"),ultra:ALL.filter(c=>c.rarity==="ultra"),epic:ALL.filter(c=>c.rarity==="epic"),rare:ALL.filter(c=>c.rarity==="rare"),common:ALL.filter(c=>c.rarity==="common")};
  const roll=(rates)=>{const r=Math.random();for(const x of rates){if(r<x.c){const p=PL[x.r];if(p&&p.length)return p[Math.floor(Math.random()*p.length)]}}const p=PL.common.length?PL.common:ALL;return p[Math.floor(Math.random()*p.length)]};
  const rollPack=(id)=>{const p=PT.find(x=>x.id===id);if(!p)return[];const c=[];if(p.lg&&PL.myth.length)c.push({...PL.myth[Math.floor(Math.random()*PL.myth.length)],uid:Math.random()});for(let i=c.length;i<p.n;i++)c.push({...roll(p.rates),uid:Math.random()});return c};
- const openPack=(id)=>{if((pi[id]||0)<1){sT("No packs!","#ef4444");return}setPi(p=>({...p,[id]:(p[id]||0)-1}));const cards=rollPack(id);setOc(cards);setRev([]);setAllR(false);setApt(id);setShk(true);setScr("opening");setTimeout(()=>setShk(false),1100)};
+ const openPack=(id)=>{if((pi[id]||0)<1){sT("No packs!","#ef4444");return}setPi(p=>({...p,[id]:(p[id]||0)-1}));setOc(rollPack(id));setRev([]);setAllR(false);setApt(id);setShk(true);setScr("opening");setTimeout(()=>setShk(false),1100)};
  const buyPack=(id)=>{const p=PT.find(x=>x.id===id);if(!p||!p.cost)return;if(coins<p.cost){sT("Not enough coins!","#ef4444");return}setCoins(c=>c-p.cost);setPi(x=>({...x,[id]:(x[id]||0)+1}));sT(p.name+" added! 📦",p.color)};
  const revCard=(i)=>{if(rev.includes(i))return;const n=[...rev,i];setRev(n);if(n.length===oc.length)setTimeout(()=>setAllR(true),600)};
- const revAll=()=>{oc.forEach((_,i)=>setTimeout(()=>setRev(r=>[...new Set([...r,i])]),i*180));setTimeout(()=>setAllR(true),oc.length*180+600)};
+ const revAll=()=>{oc.forEach((_,i)=>setTimeout(()=>setRev(r=>[...new Set([...r,i])]),i*160));setTimeout(()=>setAllR(true),oc.length*160+600)};
  const collect=()=>{setCol(c=>[...c,...oc.map(x=>({...x,uid:x.uid||Math.random()}))]);setOc([]);setRev([]);setAllR(false);setScr("home")};
  const sellCard=(uid)=>{const c=col.find(x=>x.uid===uid);if(!c)return;const nlu={...lu};Object.keys(nlu).forEach(k=>{if(nlu[k]===uid)delete nlu[k]});setLu(nlu);setCoins(v=>v+c.value);setCol(x=>x.filter(y=>y.uid!==uid));sT("Sold "+c.name+" · 🪙"+fmt(c.value),RC[c.rarity]?.border)};
- const sellByR=(r)=>{const ts=col.filter(c=>c.rarity===r&&!Object.values(lu).includes(c.uid));const t=ts.reduce((s,c)=>s+c.value,0);const u=new Set(ts.map(c=>c.uid));setCol(c=>c.filter(x=>!u.has(x.uid)));setCoins(c=>c+t);sT("Sold "+ts.length+" "+(RC[r]?.label)+"s · 🪙"+fmt(t))};
  const buyMkt=(card)=>{if(coins<card.marketPrice){sT("Not enough coins!","#ef4444");return}setCoins(c=>c-card.marketPrice);setCol(c=>[...c,{...card,uid:Math.random()}]);sT("Bought "+card.name+"!",RC[card.rarity]?.border)};
- const slotClick=(s)=>{setLp(s);setScr("lineup-pick")};
- const assign=(uid)=>{if(!lp)return;const nlu={...lu};Object.keys(nlu).forEach(k=>{if(nlu[k]===uid)delete nlu[k]});nlu[lp.id]=uid;setLu(nlu);setLp(null);setScr("lineup")};
+ const slotClick=(s)=>{setLp(s);setScr("pick")};
+ const assign=(uid)=>{if(!lp)return;const c=col.find(x=>x.uid===uid);if(!c){return}
+  // cap + challenge legality
+  if(c.ovr>CH.maxOvr){sT("Player over OVR limit ("+CH.maxOvr+")","#ef4444");return}
+  const nlu={...lu};Object.keys(nlu).forEach(k=>{if(nlu[k]===uid)delete nlu[k]});nlu[lp.id]=uid;
+  const used=LS.reduce((s,sl)=>{const u=nlu[sl.id];if(!u)return s;const cc=col.find(x=>x.uid===u);return cc?s+salary(cc):s},0);
+  if(used>CH.cap){sT("Over the cap! "+fmtSal(used)+" / "+fmtSal(CH.cap),"#ef4444");return}
+  setLu(nlu);setLp(null);setScr("lineup")};
+ const clearSlot=(id)=>{const nlu={...lu};delete nlu[id];setLu(nlu)};
 
- const sc=[...col].sort((a,b)=>sortBy==="rarity"?RO[a.rarity]-RO[b.rarity]||b.value-a.value:sortBy==="value"?b.value-a.value:sortBy==="team"?a.team.localeCompare(b.team):a.pos.localeCompare(b.pos));
+ // Trade code helpers
+ const makeTradeCode=()=>{const o=tradeOut.map(u=>{const c=col.find(x=>x.uid===u);return c?{n:c.name,t:c.team,p:c.pos,r:c.rarity,pr:c.prestige,ov:c.ovr}:null}).filter(Boolean);return btoa(JSON.stringify({give:o,cash:tradeCash}))};
+ const proposeTrade=()=>{if(!tradeOut.length&&!tradeCash){sT("Add cards or cash first","#ef4444");return}setTradeCode(makeTradeCode());sT("Trade code generated — send it!","#4ade80")};
+ const acceptTrade=()=>{try{const d=JSON.parse(atob(importCode.trim()));const got=(d.give||[]).map(x=>({name:x.n,team:x.t,pos:x.p,rarity:x.r,prestige:x.pr,ovr:x.ov,value:val(x.r,x.pr),marketPrice:mp(val(x.r,x.pr)),uid:Math.random()}));setCol(c=>[...c,...got]);if(d.cash)setCoins(v=>v+0);sT("Received "+got.length+" card(s)!","#4ade80");setImportCode("")}catch(e){sT("Invalid trade code","#ef4444")}};
+ const lineupCode=()=>{const o=LS.map(sl=>{const u=lu[sl.id];if(!u)return null;const c=col.find(x=>x.uid===u);return c?{s:sl.id,ov:c.ovr,n:c.name,t:c.team}:null}).filter(Boolean);return btoa(JSON.stringify(o))};
+
+ const sc=[...col].sort((a,b)=>sortBy==="ovr"?b.ovr-a.ovr:sortBy==="rarity"?RO[a.rarity]-RO[b.rarity]||b.ovr-a.ovr:sortBy==="sal"?salary(b)-salary(a):sortBy==="team"?a.team.localeCompare(b.team):a.pos.localeCompare(b.pos));
  const fc=filterR==="all"?sc:filterR==="legend"?sc.filter(c=>c.rarity==="myth"):sc.filter(c=>c.rarity===filterR);
- const tv=col.reduce((s,c)=>s+c.value,0);
- const lv=LS.reduce((s,sl)=>{const u=lu[sl.id];if(!u)return s;const c=col.find(x=>x.uid===u);return c?s+c.value:s},0);
+ const luCards=LS.map(sl=>({sl,c:lu[sl.id]?col.find(x=>x.uid===lu[sl.id]):null}));
+ const filled=luCards.filter(x=>x.c);
+ const capUsed=filled.reduce((s,x)=>s+salary(x.c),0);
+ const baseScore=filled.reduce((s,x)=>s+x.c.ovr,0);
+ const teamCount={};filled.forEach(x=>{teamCount[x.c.team]=(teamCount[x.c.team]||0)+1});
+ const chemBonus=Object.values(teamCount).reduce((s,n)=>s+(n>=3?(n-2)*5:0),0);
+ const teamScore=baseScore+chemBonus;
+ const maxPossible=LS.length*99;
+ const[gL,gC]=grade(teamScore,maxPossible);
+ const legal=filled.length===LS.length&&capUsed<=CH.cap;
  const rc=col.reduce((a,c)=>({...a,[c.rarity]:(a[c.rarity]||0)+1}),{});
- const mkC=ALL.filter(c=>{if(mf!=="all"&&c.rarity!==mf)return false;if(ms&&!c.name.toLowerCase().includes(ms.toLowerCase())&&!c.team.toLowerCase().includes(ms.toLowerCase()))return false;return true}).sort((a,b)=>RO[a.rarity]-RO[b.rarity]||b.value-a.value);
- const elig=lp?col.filter(c=>lp.pos.includes(c.pos)):[];
- const NAV=[{id:"home",l:"PACKS",i:"📦"},{id:"binder",l:"BINDER",i:"📂"},{id:"lineup",l:"LINEUP",i:"🏟️"},{id:"market",l:"MARKET",i:"🏪"}];
+ const mkC=ALL.filter(c=>{if(mf!=="all"&&c.rarity!==mf)return false;if(msq&&!c.name.toLowerCase().includes(msq.toLowerCase())&&!c.team.toLowerCase().includes(msq.toLowerCase()))return false;return true}).sort((a,b)=>b.ovr-a.ovr);
+ const elig=lp?col.filter(c=>lp.pos.includes(c.pos)&&c.ovr<=CH.maxOvr).sort((a,b)=>b.ovr-a.ovr):[];
+ const NAV=[{id:"home",l:"PACKS",i:"📦"},{id:"binder",l:"BINDER",i:"📂"},{id:"lineup",l:"TEAM",i:"🏟️"},{id:"market",l:"MARKET",i:"🏪"},{id:"trade",l:"TRADE",i:"🔄"},{id:"vs",l:"VS",i:"⚔️"}];
  const pt=PT.find(p=>p.id===apt)||PT[1];
+ const decodeLineup=(code)=>{try{const a=JSON.parse(atob(code.trim()));const base=a.reduce((s,x)=>s+x.ov,0);const tc={};a.forEach(x=>{tc[x.t]=(tc[x.t]||0)+1});const ch=Object.values(tc).reduce((s,n)=>s+(n>=3?(n-2)*5:0),0);return{n:a.length,score:base+ch,base,chem:ch}}catch(e){return null}};
 
  return(
   <div style={{minHeight:"100vh",background:"radial-gradient(ellipse at 15% 10%,#1a0800 0%,#05050f 50%,#000308 100%)",position:"relative",overflowX:"hidden"}}>
-   <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(#FFB80010 1px,transparent 1px),linear-gradient(90deg,#FFB80010 1px,transparent 1px)",backgroundSize:"64px 64px",animation:"gridPulse 5s ease-in-out infinite"}}/>
-   {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",zIndex:200,background:"rgba(0,0,0,.96)",border:"1px solid "+toast.c+"55",borderRadius:12,padding:"11px 22px",fontSize:12,letterSpacing:1.5,color:toast.c,boxShadow:"0 0 18px "+toast.c+"44",animation:"toastIn .3s ease both",whiteSpace:"nowrap"}}>{toast.m}</div>}
+   {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",zIndex:200,background:"rgba(0,0,0,.96)",border:"1px solid "+toast.c+"55",borderRadius:12,padding:"11px 22px",fontSize:12,letterSpacing:1.5,color:toast.c,boxShadow:"0 0 18px "+toast.c+"44",animation:"tI .3s ease both",whiteSpace:"nowrap"}}>{toast.m}</div>}
    <div style={{position:"fixed",top:0,left:0,right:0,zIndex:100,background:"rgba(3,4,10,.94)",backdropFilter:"blur(14px)",borderBottom:"1px solid #FFB80020",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 16px"}}>
-    <div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800",animation:"tGlow 3s ease-in-out infinite"}}>🏈 NFL PACKS</div>
+    <div style={{fontSize:17,fontWeight:700,letterSpacing:3,color:"#FFB800",animation:"tG 3s ease-in-out infinite"}}>🏈 NFL CARD GM</div>
     <div style={{display:"flex",alignItems:"center",gap:5,padding:"5px 12px",background:"rgba(255,184,0,.1)",border:"1px solid #FFB80044",borderRadius:18}}><span style={{fontSize:12}}>🪙</span><span style={{fontSize:13,fontWeight:700,color:"#FFB800"}}>{fmt(coins)}</span></div>
    </div>
    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(3,4,10,.96)",backdropFilter:"blur(14px)",borderTop:"1px solid #21262d",display:"flex",justifyContent:"space-around",padding:"8px 0 10px"}}>
-    {NAV.map(n=><button key={n.id} onClick={()=>setScr(n.id)} style={{background:"transparent",border:"none",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",padding:"4px 16px",color:scr===n.id?"#FFB800":"#374151"}}><span style={{fontSize:20}}>{n.i}</span><span style={{fontSize:9,letterSpacing:2}}>{n.l}</span></button>)}
+    {NAV.map(n=><button key={n.id} onClick={()=>setScr(n.id)} style={{background:"transparent",border:"none",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",padding:"4px 10px",color:scr===n.id?"#FFB800":"#374151"}}><span style={{fontSize:18}}>{n.i}</span><span style={{fontSize:8,letterSpacing:1}}>{n.l}</span></button>)}
    </div>
-   <div style={{paddingTop:58,paddingBottom:68,minHeight:"100vh"}}>
-    {scr==="home"&&<div style={{padding:"20px 16px",maxWidth:900,margin:"0 auto"}}>
-     <div style={{marginBottom:16,textAlign:"center"}}><div style={{fontSize:11,letterSpacing:4,color:"#374151"}}>PACK SHOP · {ALL.length} PLAYERS</div></div>
+   <div style={{paddingTop:54,paddingBottom:66,minHeight:"100vh"}}>
+
+    {scr==="home"&&<div style={{padding:"18px 16px",maxWidth:900,margin:"0 auto"}}>
+     <div style={{marginBottom:14,textAlign:"center"}}><div style={{fontSize:11,letterSpacing:4,color:"#374151"}}>PACK SHOP · {ALL.length} PLAYERS</div></div>
      <div style={{display:"flex",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
       {PT.map(p=>{const co=(pi[p.id]||0)>0,cb=coins>=p.cost;return<div key={p.id} style={{background:"rgba(255,255,255,.03)",border:"1px solid "+p.border+"44",borderRadius:14,padding:16,display:"flex",flexDirection:"column",gap:10,minWidth:200,maxWidth:240}}>
        <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{fontSize:32}}>{p.emoji}</div><div><div style={{fontSize:13,fontWeight:700,color:p.color,letterSpacing:2}}>{p.name}</div><div style={{fontSize:10,color:"#4a5568",marginTop:2}}>{p.desc}</div></div></div>
-       <div style={{display:"flex",gap:8,alignItems:"center"}}>{p.cost>0&&<div style={{fontSize:11,color:"#FFB800",letterSpacing:1}}>🪙 {fmt(p.cost)}</div>}{(pi[p.id]||0)>0&&<div style={{fontSize:10,color:"#4ade80"}}>({pi[p.id]} stock)</div>}</div>
+       <div style={{display:"flex",gap:8,alignItems:"center"}}>{p.cost>0&&<div style={{fontSize:11,color:"#FFB800"}}>🪙 {fmt(p.cost)}</div>}{(pi[p.id]||0)>0&&<div style={{fontSize:10,color:"#4ade80"}}>({pi[p.id]} stock)</div>}</div>
        <div style={{display:"flex",gap:8}}>
         <button onClick={()=>openPack(p.id)} disabled={!co} style={{flex:1,background:co?"linear-gradient(135deg,"+p.color+"88,"+p.color+")":"#0d1117",border:"none",borderRadius:8,color:co?"#fff":"#21262d",padding:"8px 0",fontSize:11,fontWeight:700,letterSpacing:1.5,cursor:co?"pointer":"not-allowed"}}>{co?"OPEN ("+pi[p.id]+")":"NO STOCK"}</button>
-        {p.cost>0&&<button onClick={()=>buyPack(p.id)} disabled={!cb} style={{background:cb?"rgba(255,255,255,.08)":"transparent",border:"1px solid "+(cb?p.border+"66":"#21262d"),borderRadius:8,color:cb?p.color:"#374151",padding:"8px 12px",fontSize:10,letterSpacing:1,cursor:cb?"pointer":"not-allowed"}}>BUY</button>}
+        {p.cost>0&&<button onClick={()=>buyPack(p.id)} disabled={!cb} style={{background:cb?"rgba(255,255,255,.08)":"transparent",border:"1px solid "+(cb?p.border+"66":"#21262d"),borderRadius:8,color:cb?p.color:"#374151",padding:"8px 12px",fontSize:10,cursor:cb?"pointer":"not-allowed"}}>BUY</button>}
        </div>
       </div>})}
      </div>
     </div>}
-    {scr==="opening"&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 126px)"}}>
+
+    {scr==="opening"&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 120px)"}}>
      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24}}>
       <div style={{fontSize:13,letterSpacing:4,color:pt.color}}>{shk?"Shaking...":"CLICK TO OPEN"}</div>
-      <div onClick={!shk?()=>setScr("reveal"):undefined} style={{width:175,height:240,background:"linear-gradient(160deg,#0d1117,"+pt.color+"22,#0d1117)",border:"3px solid "+pt.border,borderRadius:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,cursor:shk?"default":"pointer",animation:shk?"pShake .35s ease infinite,pGlow 1s ease infinite":"pGlow .7s ease infinite",boxShadow:"0 0 44px "+pt.color+"44",position:"relative"}}>
+      <div onClick={!shk?()=>setScr("reveal"):undefined} style={{width:175,height:240,background:"linear-gradient(160deg,#0d1117,"+pt.color+"22,#0d1117)",border:"3px solid "+pt.border,borderRadius:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,cursor:shk?"default":"pointer",boxShadow:"0 0 44px "+pt.color+"44",position:"relative"}}>
        <div style={{fontSize:56}}>{pt.emoji}</div><div style={{fontSize:14,letterSpacing:3,color:pt.color,fontWeight:700}}>{pt.name.toUpperCase()}</div><div style={{fontSize:9,letterSpacing:2,color:"#4a5568"}}>{pt.n} CARDS</div>
        {!shk&&<div style={{position:"absolute",bottom:12,fontSize:9,letterSpacing:2,color:pt.color}}>CLICK TO RIP OPEN</div>}
       </div>
      </div>
     </div>}
+
     {scr==="reveal"&&<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"20px 12px",gap:18}}>
      <div style={{fontSize:10,letterSpacing:4,color:"#374151"}}>TAP CARDS TO REVEAL</div>
      <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{oc.map((c,i)=><Card key={c.uid||i} card={c} rev={rev.includes(i)} onClick={()=>revCard(i)}/>)}</div>
-     {allR&&<div style={{animation:"slideUp .4s ease both",textAlign:"center",width:"100%"}}>
-      <div style={{fontSize:13,color:"#FFB800",letterSpacing:2,marginBottom:14}}>TOTAL: 🪙 {fmt(oc.reduce((s,c)=>s+c.value,0))}</div>
+     {allR&&<div style={{animation:"su .4s ease both",textAlign:"center"}}>
       <button onClick={collect} style={{background:"linear-gradient(135deg,#92400e,#d97706,#fbbf24)",border:"none",borderRadius:10,color:"#000",padding:"13px 36px",fontSize:15,fontWeight:700,letterSpacing:3,cursor:"pointer",boxShadow:"0 0 22px #FFB80066"}}>ADD TO BINDER →</button>
      </div>}
      {!allR&&<button onClick={revAll} style={{background:"transparent",border:"1px solid #21262d",borderRadius:8,color:"#374151",padding:"9px 22px",fontSize:10,letterSpacing:2,cursor:"pointer"}}>REVEAL ALL</button>}
     </div>}
+
     {scr==="binder"&&<div style={{padding:16,maxWidth:1080,margin:"0 auto"}}>
      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
-      <div><div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800"}}>MY BINDER</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>{col.length} cards · 🪙{fmt(tv)}</div></div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-       <button onClick={()=>setSellMode(s=>!s)} style={{background:sellMode?"#ef444415":"transparent",border:"1px solid "+(sellMode?"#ef4444":"#21262d"),borderRadius:6,color:sellMode?"#ef4444":"#4a5568",padding:"5px 12px",fontSize:9,letterSpacing:2,cursor:"pointer"}}>{sellMode?"EXIT SELL":"SELL MODE"}</button>
-       {["common","rare"].map(r=>rc[r]>0&&<button key={r} onClick={()=>sellByR(r)} style={{background:"transparent",border:"1px solid "+RC[r].border+"33",borderRadius:6,color:RC[r].border,opacity:.7,padding:"5px 10px",fontSize:9,letterSpacing:1.5,cursor:"pointer"}}>SELL {RC[r].label}S ({rc[r]})</button>)}
-      </div>
+      <div><div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800"}}>MY BINDER</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>{col.length} cards</div></div>
+      <button onClick={()=>setSellMode(s=>!s)} style={{background:sellMode?"#ef444415":"transparent",border:"1px solid "+(sellMode?"#ef4444":"#21262d"),borderRadius:6,color:sellMode?"#ef4444":"#4a5568",padding:"5px 12px",fontSize:9,letterSpacing:2}}>{sellMode?"EXIT SELL":"SELL MODE"}</button>
      </div>
-     <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>{Object.entries(RC).map(([r,c])=>rc[r]?<div key={r} style={{padding:"8px 14px",borderRadius:8,border:"1px solid "+c.border+"33",background:c.border+"08"}}><div style={{fontSize:7,letterSpacing:2,color:c.border}}>{c.label}</div><div style={{fontSize:18,fontWeight:700,color:c.border}}>{rc[r]}</div></div>:null)}</div>
      <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
       <span style={{fontSize:8,letterSpacing:2,color:"#21262d"}}>FILTER:</span>
-      {[["all","ALL"],["myth","LEGEND"],["legendary","LEG"],["ultra","ULTRA"],["epic","EPIC"],["rare","RARE"],["common","COM"]].map(([k,l])=><button key={k} onClick={()=>setFilterR(k)} style={{background:filterR===k?(RC[k]?.border||"#FFB800")+"18":"transparent",border:"1px solid "+(filterR===k?RC[k]?.border||"#FFB800":"#21262d"),borderRadius:6,color:filterR===k?RC[k]?.border||"#FFB800":"#374151",padding:"3px 10px",fontSize:9,letterSpacing:1,cursor:"pointer"}}>{l}</button>)}
+      {[["all","ALL"],["myth","LEGEND"],["legendary","LEG"],["ultra","ULTRA"],["epic","EPIC"],["rare","RARE"],["common","COM"]].map(([k,l])=><button key={k} onClick={()=>setFilterR(k)} style={{background:filterR===k?(RC[k]?.border||"#FFB800")+"18":"transparent",border:"1px solid "+(filterR===k?RC[k]?.border||"#FFB800":"#21262d"),borderRadius:6,color:filterR===k?RC[k]?.border||"#FFB800":"#374151",padding:"3px 10px",fontSize:9}}>{l}</button>)}
       <span style={{fontSize:8,letterSpacing:2,color:"#21262d",marginLeft:8}}>SORT:</span>
-      {[["rarity","RAR"],["value","VAL"],["team","TEAM"],["pos","POS"]].map(([k,l])=><button key={k} onClick={()=>setSortBy(k)} style={{background:sortBy===k?"#FFB80018":"transparent",border:"1px solid "+(sortBy===k?"#FFB800":"#21262d"),borderRadius:6,color:sortBy===k?"#FFB800":"#374151",padding:"3px 10px",fontSize:9,letterSpacing:1,cursor:"pointer"}}>{l}</button>)}
+      {[["ovr","OVR"],["rarity","RAR"],["sal","SAL"],["team","TEAM"],["pos","POS"]].map(([k,l])=><button key={k} onClick={()=>setSortBy(k)} style={{background:sortBy===k?"#FFB80018":"transparent",border:"1px solid "+(sortBy===k?"#FFB800":"#21262d"),borderRadius:6,color:sortBy===k?"#FFB800":"#374151",padding:"3px 10px",fontSize:9}}>{l}</button>)}
      </div>
      {fc.length===0?<div style={{textAlign:"center",padding:"60px 0",color:"#21262d",fontSize:12,letterSpacing:3}}>NO CARDS YET</div>:
      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{fc.map(c=><div key={c.uid} style={{display:"flex",flexDirection:"column",gap:4}}>
       <Card card={c} rev={true}/>
-      {sellMode&&!Object.values(lu).includes(c.uid)&&<button onClick={()=>sellCard(c.uid)} style={{width:"100%",background:"rgba(0,0,0,.5)",border:"1px solid "+RC[c.rarity]?.border+"44",borderRadius:6,color:RC[c.rarity]?.border,fontSize:9,letterSpacing:1.5,padding:"5px 0",cursor:"pointer"}}>SELL · 🪙{fmt(c.value)}</button>}
+      {sellMode&&!Object.values(lu).includes(c.uid)&&<button onClick={()=>sellCard(c.uid)} style={{width:"100%",background:"rgba(0,0,0,.5)",border:"1px solid "+RC[c.rarity]?.border+"44",borderRadius:6,color:RC[c.rarity]?.border,fontSize:9,padding:"5px 0"}}>SELL · 🪙{fmt(c.value)}</button>}
       {sellMode&&Object.values(lu).includes(c.uid)&&<div style={{textAlign:"center",fontSize:8,color:"#374151",padding:"5px 0"}}>IN LINEUP</div>}
      </div>)}</div>}
     </div>}
+
     {scr==="lineup"&&<div style={{padding:16,maxWidth:900,margin:"0 auto"}}>
-     <div style={{marginBottom:14}}><div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800"}}>MY LINEUP</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>Value: 🪙{fmt(lv)} · Tap slot to assign</div></div>
+     <div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800",marginBottom:4}}>MY TEAM</div>
+     <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:10}}>
+      <span style={{fontSize:8,letterSpacing:2,color:"#21262d"}}>MODE:</span>
+      {CHALLENGES.map(c=><button key={c.id} onClick={()=>setChal(c.id)} title={c.desc} style={{background:chal===c.id?"#FFB80018":"transparent",border:"1px solid "+(chal===c.id?"#FFB800":"#21262d"),borderRadius:6,color:chal===c.id?"#FFB800":"#374151",padding:"3px 10px",fontSize:9}}>{c.name}</button>)}
+     </div>
+     <div style={{fontSize:9,color:"#4a5568",marginBottom:10}}>{CH.desc}</div>
+     {/* Cap meter */}
+     <div style={{background:"rgba(255,255,255,.03)",border:"1px solid #21262d",borderRadius:12,padding:14,marginBottom:14}}>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:6}}>
+       <span style={{color:capUsed>CH.cap?"#ef4444":"#9CA3AF"}}>CAP: {fmtSal(capUsed)} / {fmtSal(CH.cap)}</span>
+       <span style={{color:gC,fontWeight:700}}>SCORE {teamScore} · {gL}</span>
+      </div>
+      <div style={{height:8,background:"#0d1117",borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:Math.min(100,capUsed/CH.cap*100)+"%",background:capUsed>CH.cap?"#ef4444":"linear-gradient(90deg,#4ade80,#FFB800)",transition:"width .3s"}}/></div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:8,color:"#4a5568",marginTop:6}}>
+       <span>{filled.length}/{LS.length} slots filled{chemBonus?" · +"+chemBonus+" chemistry":""}</span>
+       <span style={{color:legal?"#4ade80":"#ef4444"}}>{legal?"✓ LEGAL LINEUP":"✗ "+(filled.length<LS.length?"INCOMPLETE":"OVER CAP")}</span>
+      </div>
+     </div>
      {[{t:"OFFENSE",ids:["QB1","RB1","RB2","WR1","WR2","WR3","TE1","FLEX","OT1"]},{t:"DEFENSE",ids:["DE1","DE2","DT1","LB1","LB2","CB1","CB2","S1","S2"]},{t:"SPECIAL",ids:["K1"]}].map(g=>
-      <div key={g.t} style={{marginBottom:16}}><div style={{fontSize:10,letterSpacing:3,color:"#374151",marginBottom:8}}>{g.t}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{LS.filter(s=>g.ids.includes(s.id)).map(sl=>{const u=lu[sl.id];const c=u?col.find(x=>x.uid===u):null;return<Slot key={sl.id} slot={sl} card={c} onClick={slotClick}/>})}</div></div>)}
+      <div key={g.t} style={{marginBottom:16}}><div style={{fontSize:10,letterSpacing:3,color:"#374151",marginBottom:8}}>{g.t}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{LS.filter(s=>g.ids.includes(s.id)).map(sl=>{const u=lu[sl.id];const c=u?col.find(x=>x.uid===u):null;return<div key={sl.id} style={{position:"relative"}}><Slot slot={sl} card={c} onClick={slotClick}/>{c&&<button onClick={()=>clearSlot(sl.id)} style={{position:"absolute",top:-6,right:-6,width:18,height:18,borderRadius:9,background:"#ef4444",border:"none",color:"#fff",fontSize:10,cursor:"pointer"}}>×</button>}</div>})}</div></div>)}
     </div>}
-    {scr==="lineup-pick"&&lp&&<div style={{padding:16,maxWidth:900,margin:"0 auto"}}>
+
+    {scr==="pick"&&lp&&<div style={{padding:16,maxWidth:900,margin:"0 auto"}}>
      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
-      <button onClick={()=>{setLp(null);setScr("lineup")}} style={{background:"transparent",border:"1px solid #21262d",borderRadius:6,color:"#4a5568",padding:"5px 12px",fontSize:10,letterSpacing:2,cursor:"pointer"}}>← BACK</button>
-      <div><div style={{fontSize:14,fontWeight:700,color:"#FFB800",letterSpacing:3}}>CHOOSE {lp.label}</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>Eligible: {lp.pos.join(", ")}</div></div>
+      <button onClick={()=>{setLp(null);setScr("lineup")}} style={{background:"transparent",border:"1px solid #21262d",borderRadius:6,color:"#4a5568",padding:"5px 12px",fontSize:10,letterSpacing:2}}>← BACK</button>
+      <div><div style={{fontSize:14,fontWeight:700,color:"#FFB800",letterSpacing:3}}>CHOOSE {lp.label}</div><div style={{fontSize:9,color:"#374151"}}>Sorted by OVR · Cap room: {fmtSal(Math.max(0,CH.cap-capUsed))}</div></div>
      </div>
      {elig.length===0?<div style={{textAlign:"center",padding:"60px 0",color:"#21262d",fontSize:12,letterSpacing:3}}>NO ELIGIBLE CARDS</div>:
      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{elig.map(c=><div key={c.uid} style={{display:"flex",flexDirection:"column",gap:4}}>
       <Card card={c} rev={true} onClick={()=>assign(c.uid)}/>
-      <button onClick={()=>assign(c.uid)} style={{width:"100%",background:RC[c.rarity]?.border+"18",border:"1px solid "+RC[c.rarity]?.border+"55",borderRadius:6,color:RC[c.rarity]?.border,fontSize:9,letterSpacing:1.5,padding:"5px 0",cursor:"pointer"}}>SELECT</button>
+      <button onClick={()=>assign(c.uid)} style={{width:"100%",background:RC[c.rarity]?.border+"18",border:"1px solid "+RC[c.rarity]?.border+"55",borderRadius:6,color:RC[c.rarity]?.border,fontSize:9,padding:"5px 0"}}>SELECT</button>
      </div>)}</div>}
     </div>}
+
     {scr==="market"&&<div style={{padding:16,maxWidth:1080,margin:"0 auto"}}>
-     <div style={{marginBottom:12}}><div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800"}}>CARD MARKET</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>Buy any card · 2.5× sell value · 🪙{fmt(coins)}</div></div>
+     <div style={{marginBottom:12}}><div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800"}}>CARD MARKET</div><div style={{fontSize:9,color:"#374151",marginTop:2}}>Buy any card · 🪙{fmt(coins)}</div></div>
      <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
-      <input value={ms} onChange={e=>setMs(e.target.value)} placeholder="Search..." style={{background:"rgba(255,255,255,.05)",border:"1px solid #21262d",borderRadius:8,color:"#F1F5F9",padding:"6px 12px",fontSize:11,letterSpacing:1,outline:"none",width:200}}/>
-      {[["all","ALL"],["myth","LEGEND"],["legendary","LEG"],["ultra","ULTRA"],["epic","EPIC"],["rare","RARE"],["common","COM"]].map(([k,l])=><button key={k} onClick={()=>setMf(k)} style={{background:mf===k?(RC[k]?.border||"#FFB800")+"18":"transparent",border:"1px solid "+(mf===k?RC[k]?.border||"#FFB800":"#21262d"),borderRadius:6,color:mf===k?RC[k]?.border||"#FFB800":"#374151",padding:"3px 10px",fontSize:9,letterSpacing:1,cursor:"pointer"}}>{l}</button>)}
+      <input value={msq} onChange={e=>setMsq(e.target.value)} placeholder="Search..." style={{background:"rgba(255,255,255,.05)",border:"1px solid #21262d",borderRadius:8,color:"#F1F5F9",padding:"6px 12px",fontSize:11,outline:"none",width:200}}/>
+      {[["all","ALL"],["myth","LEGEND"],["legendary","LEG"],["ultra","ULTRA"],["epic","EPIC"],["rare","RARE"],["common","COM"]].map(([k,l])=><button key={k} onClick={()=>setMf(k)} style={{background:mf===k?(RC[k]?.border||"#FFB800")+"18":"transparent",border:"1px solid "+(mf===k?RC[k]?.border||"#FFB800":"#21262d"),borderRadius:6,color:mf===k?RC[k]?.border||"#FFB800":"#374151",padding:"3px 10px",fontSize:9}}>{l}</button>)}
      </div>
      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{mkC.slice(0,80).map((c,i)=>{const own=col.some(x=>x.name===c.name&&x.team===c.team),ca=coins>=c.marketPrice;return<div key={c.uid||i} style={{display:"flex",flexDirection:"column",gap:4}}>
       <Card card={c} rev={true} sz="sm" badge={own?{text:"OWNED",bg:"#374151"}:null}/>
-      <button onClick={()=>buyMkt(c)} disabled={!ca} style={{width:"100%",background:ca?RC[c.rarity]?.border+"18":"transparent",border:"1px solid "+(ca?RC[c.rarity]?.border+"55":"#21262d"),borderRadius:6,color:ca?RC[c.rarity]?.border:"#374151",fontSize:8,letterSpacing:1,padding:"5px 0",cursor:ca?"pointer":"not-allowed"}}>{ca?"BUY 🪙"+fmt(c.marketPrice):"🪙"+fmt(c.marketPrice)}</button>
+      <button onClick={()=>buyMkt(c)} disabled={!ca} style={{width:"100%",background:ca?RC[c.rarity]?.border+"18":"transparent",border:"1px solid "+(ca?RC[c.rarity]?.border+"55":"#21262d"),borderRadius:6,color:ca?RC[c.rarity]?.border:"#374151",fontSize:8,padding:"5px 0",cursor:ca?"pointer":"not-allowed"}}>{ca?"BUY 🪙"+fmt(c.marketPrice):"🪙"+fmt(c.marketPrice)}</button>
      </div>})}</div>
     </div>}
+
+    {scr==="trade"&&<div style={{padding:16,maxWidth:900,margin:"0 auto"}}>
+     <div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800",marginBottom:4}}>TRADE CENTER</div>
+     <div style={{fontSize:9,color:"#4a5568",marginBottom:16}}>Build an offer → generate a code → other player pastes it to receive your cards. Works across devices.</div>
+     <div style={{background:"rgba(255,255,255,.03)",border:"1px solid #21262d",borderRadius:12,padding:14,marginBottom:16}}>
+      <div style={{fontSize:11,color:"#FFB800",letterSpacing:2,marginBottom:8}}>SEND CARDS ({tradeOut.length})</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10,maxHeight:200,overflowY:"auto"}}>
+       {col.length===0?<div style={{fontSize:10,color:"#374151"}}>No cards to trade.</div>:col.map(c=>{const on=tradeOut.includes(c.uid);return<div key={c.uid} onClick={()=>setTradeOut(t=>on?t.filter(x=>x!==c.uid):[...t,c.uid])} style={{cursor:"pointer",opacity:on?1:.5,outline:on?"2px solid "+RC[c.rarity]?.border:"none",borderRadius:8}}><Card card={c} rev={true} sz="sm"/></div>})}
+      </div>
+      <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
+       <span style={{fontSize:10,color:"#9CA3AF"}}>Add coins:</span>
+       <input type="number" value={tradeCash} onChange={e=>setTradeCash(Math.max(0,Math.min(coins,+e.target.value||0)))} style={{background:"rgba(255,255,255,.05)",border:"1px solid #21262d",borderRadius:6,color:"#F1F5F9",padding:"5px 10px",fontSize:11,width:120}}/>
+       <span style={{fontSize:9,color:"#374151"}}>(have 🪙{fmt(coins)})</span>
+      </div>
+      <button onClick={proposeTrade} style={{background:"linear-gradient(135deg,#92400e,#fbbf24)",border:"none",borderRadius:8,color:"#000",padding:"9px 20px",fontSize:11,fontWeight:700,letterSpacing:2}}>GENERATE TRADE CODE</button>
+      {tradeCode&&<div style={{marginTop:10}}><div style={{fontSize:8,color:"#4a5568",marginBottom:4}}>Copy & send this code:</div><textarea readOnly value={tradeCode} onClick={e=>e.target.select()} style={{width:"100%",height:60,background:"#0d1117",border:"1px solid #FFB80044",borderRadius:6,color:"#4ade80",fontSize:9,padding:8,resize:"none"}}/></div>}
+     </div>
+     <div style={{background:"rgba(255,255,255,.03)",border:"1px solid #21262d",borderRadius:12,padding:14}}>
+      <div style={{fontSize:11,color:"#4ade80",letterSpacing:2,marginBottom:8}}>RECEIVE A TRADE</div>
+      <textarea value={importCode} onChange={e=>setImportCode(e.target.value)} placeholder="Paste a trade code here..." style={{width:"100%",height:60,background:"#0d1117",border:"1px solid #21262d",borderRadius:6,color:"#F1F5F9",fontSize:9,padding:8,resize:"none",marginBottom:10}}/>
+      <button onClick={acceptTrade} style={{background:"#4ade8022",border:"1px solid #4ade8066",borderRadius:8,color:"#4ade80",padding:"9px 20px",fontSize:11,fontWeight:700,letterSpacing:2}}>ACCEPT & ADD CARDS</button>
+     </div>
+    </div>}
+
+    {scr==="vs"&&<div style={{padding:16,maxWidth:760,margin:"0 auto"}}>
+     <div style={{fontSize:18,fontWeight:700,letterSpacing:4,color:"#FFB800",marginBottom:4}}>HEAD TO HEAD</div>
+     <div style={{fontSize:9,color:"#4a5568",marginBottom:16}}>Compare two team codes. Get your code from the "Copy My Team Code" button below.</div>
+     <div style={{background:"rgba(255,255,255,.03)",border:"1px solid #21262d",borderRadius:12,padding:14,marginBottom:14}}>
+      <div style={{fontSize:10,color:"#FFB800",marginBottom:6}}>YOUR TEAM CODE</div>
+      <textarea readOnly value={legal?lineupCode():"(complete a legal lineup first)"} onClick={e=>legal&&e.target.select()} style={{width:"100%",height:50,background:"#0d1117",border:"1px solid #FFB80044",borderRadius:6,color:legal?"#4ade80":"#374151",fontSize:9,padding:8,resize:"none"}}/>
+     </div>
+     {[["A",cmpA,setCmpA],["B",cmpB,setCmpB]].map(([lab,v,set])=><div key={lab} style={{marginBottom:12}}>
+      <div style={{fontSize:10,color:"#9CA3AF",marginBottom:4}}>TEAM {lab} CODE</div>
+      <textarea value={v} onChange={e=>set(e.target.value)} placeholder={"Paste team "+lab+" code..."} style={{width:"100%",height:48,background:"#0d1117",border:"1px solid #21262d",borderRadius:6,color:"#F1F5F9",fontSize:9,padding:8,resize:"none"}}/>
+     </div>)}
+     {(()=>{const A=cmpA&&decodeLineup(cmpA),B=cmpB&&decodeLineup(cmpB);if(!A||!B)return<div style={{fontSize:10,color:"#374151",textAlign:"center",padding:20}}>Paste both codes to compare</div>;const win=A.score>B.score?"A":B.score>A.score?"B":"TIE";return<div style={{background:"rgba(255,255,255,.03)",border:"1px solid #FFB80044",borderRadius:12,padding:16,textAlign:"center"}}>
+      <div style={{display:"flex",justifyContent:"space-around",marginBottom:12}}>
+       <div><div style={{fontSize:9,color:"#9CA3AF"}}>TEAM A</div><div style={{fontSize:28,fontWeight:700,color:win==="A"?"#4ade80":"#9CA3AF"}}>{A.score}</div><div style={{fontSize:8,color:"#4a5568"}}>{A.base} + {A.chem} chem</div></div>
+       <div style={{fontSize:20,color:"#374151",alignSelf:"center"}}>VS</div>
+       <div><div style={{fontSize:9,color:"#9CA3AF"}}>TEAM B</div><div style={{fontSize:28,fontWeight:700,color:win==="B"?"#4ade80":"#9CA3AF"}}>{B.score}</div><div style={{fontSize:8,color:"#4a5568"}}>{B.base} + {B.chem} chem</div></div>
+      </div>
+      <div style={{fontSize:14,fontWeight:700,letterSpacing:3,color:"#FFB800"}}>{win==="TIE"?"🤝 TIE GAME":"🏆 TEAM "+win+" WINS"}</div>
+     </div>})()}
+    </div>}
+
    </div>
   </div>
  );
